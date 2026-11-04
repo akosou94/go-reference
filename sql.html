@@ -61,9 +61,462 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>SQL и Postgres — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead"><code>database/sql</code> и <code>pgx</code>, пул соединений, сканирование и NULL, транзакции и уровни изоляции, SQLSTATE, индексы, <code>EXPLAIN</code>, миграции и тесты.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из документации <a href="https://pkg.go.dev/database/sql">database/sql</a>, <a href="https://pkg.go.dev/github.com/jackc/pgx/v5">pgx v5</a> и <a href="https://www.postgresql.org/docs/current/">PostgreSQL</a> (Using EXPLAIN, Indexes, Error Codes). Версия драйвера на момент сборки — pgx v5.12.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#database-sql">1. database/sql: пул и жизненный цикл</a></li>
+    <li><a href="#queries">2. Запросы и сканирование</a></li>
+    <li><a href="#null">3. NULL</a></li>
+    <li><a href="#pgx">4. pgx</a></li>
+    <li><a href="#transactions">5. Транзакции и изоляция</a></li>
+    <li><a href="#errors">6. Ошибки и SQLSTATE</a></li>
+    <li><a href="#indexes">7. Индексы</a></li>
+    <li><a href="#explain">8. EXPLAIN и планы</a></li>
+    <li><a href="#migrations">9. Миграции</a></li>
+    <li><a href="#testing">10. Тестирование</a></li>
+    <li><a href="#sources">11. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="database-sql">
+  <h2>1. database/sql: пул и жизненный цикл</h2>
+
+  <p><code>sql.Open</code> не открывает соединение: он лишь проверяет аргументы и создаёт пул. Реальное соединение появляется при первом запросе или <code>PingContext</code>. <code>*sql.DB</code> безопасен для одновременного использования и переиспользует соединения.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Настройка</th><th>По умолчанию</th><th>Смысл</th></tr></thead>
+      <tbody>
+        <tr><td><code>SetMaxOpenConns</code></td><td>0 — без предела</td><td>сколько соединений открыто одновременно</td></tr>
+        <tr><td><code>SetMaxIdleConns</code></td><td>2</td><td>сколько простаивающих соединений держать</td></tr>
+        <tr><td><code>SetConnMaxLifetime</code></td><td>0 — бесконечно</td><td>максимальный возраст соединения</td></tr>
+        <tr><td><code>SetConnMaxIdleTime</code></td><td>0 — бесконечно</td><td>сколько соединение может простаивать</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>db, err := sql.Open("pgx", dsn)
+if err != nil {
+    return err
+}
+defer db.Close()
+
+db.SetMaxOpenConns(20)
+db.SetMaxIdleConns(20)
+db.SetConnMaxLifetime(30 * time.Minute)
+db.SetConnMaxIdleTime(5 * time.Minute)
+
+if err := db.PingContext(ctx); err != nil {
+    return err
+}</code></pre>
+
+  <p class="is-muted">Лимит соединений должен соответствовать возможностям Postgres: у сервера есть <code>max_connections</code>, а каждая реплика приложения открывает свой пул. Если пул меньше, чем нужно, запросы ждут в очереди; если больше — сервер тратит память на соединения.</p>
+</section>
+
+<section id="queries">
+  <h2>2. Запросы и сканирование</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Метод</th><th>Когда</th></tr></thead>
+      <tbody>
+        <tr><td><code>ExecContext</code></td><td>запрос без строк результата: <code>insert</code>, <code>update</code>, <code>delete</code></td></tr>
+        <tr><td><code>QueryContext</code></td><td>много строк</td></tr>
+        <tr><td><code>QueryRowContext</code></td><td>ровно одна строка; ошибка приходит в <code>Scan</code></td></tr>
+        <tr><td><code>PrepareContext</code></td><td>повторяемый запрос с параметрами</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>Rows</code> нужно закрывать; после цикла проверяют <code>rows.Err()</code>, иначе ошибка чтения потеряется. <code>QueryRowContext</code> без строк возвращает <code>sql.ErrNoRows</code> из <code>Scan</code>.</p>
+
+  <pre><code>rows, err := db.QueryContext(ctx,
+    `select id, name from users where active = $1`, true)
+if err != nil {
+    return err
+}
+defer rows.Close()
+
+var users []User
+for rows.Next() {
+    var u User
+    if err := rows.Scan(&amp;u.ID, &amp;u.Name); err != nil {
+        return err
+    }
+    users = append(users, u)
+}
+if err := rows.Err(); err != nil {
+    return err
+}</code></pre>
+
+  <pre><code>var u User
+err := db.QueryRowContext(ctx,
+    `select id, name from users where id = $1`, id).
+    Scan(&amp;u.ID, &amp;u.Name)
+
+if errors.Is(err, sql.ErrNoRows) {
+    return ErrNotFound
+}
+if err != nil {
+    return err
+}</code></pre>
+
+  <p>Postgres использует позиционные параметры <code>$1</code>, <code>$2</code>. <code>LastInsertId</code> у драйвера Postgres не работает: идентификатор возвращают через <code>returning</code>.</p>
+
+  <pre><code>var id int64
+err := db.QueryRowContext(ctx,
+    `insert into users (name) values ($1) returning id`, name).
+    Scan(&amp;id)</code></pre>
+</section>
+
+<section id="null">
+  <h2>3. NULL</h2>
+
+  <p>NULL — не zero value. Сканировать NULL в <code>string</code> или <code>int</code> нельзя: <code>Scan</code> вернёт ошибку. Варианты: <code>sql.NullString</code>, <code>sql.NullInt64</code>, <code>sql.NullFloat64</code>, <code>sql.NullBool</code>, <code>sql.NullTime</code>, обобщённый <code>sql.Null[T]</code> [1.22] или указатель.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Приём</th><th>NULL превращается в</th></tr></thead>
+      <tbody>
+        <tr><td><code>sql.NullString</code></td><td><code>Valid == false</code>, <code>String == ""</code></td></tr>
+        <tr><td><code>sql.Null[T]</code></td><td><code>Valid == false</code>, <code>V</code> — zero value</td></tr>
+        <tr><td><code>*string</code>, <code>*int</code></td><td><code>nil</code></td></tr>
+        <tr><td><code>COALESCE(col, '')</code></td><td>значение по умолчанию на стороне SQL</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>var name sql.NullString
+if err := row.Scan(&amp;name); err != nil {
+    return err
+}
+if name.Valid {
+    fmt.Println(name.String)
+}
+
+var age sql.Null[int]
+if err := row.Scan(&amp;age); err != nil {
+    return err
+}</code></pre>
+
+  <p class="is-muted">Для JSON-полей «нет значения» и «пустая строка» — разные вещи. Если API должен их различать, указатель или <code>Null[T]</code> честнее, чем <code>COALESCE</code>.</p>
+</section>
+
+<section id="pgx">
+  <h2>4. pgx</h2>
+
+  <p><code>pgx</code> — драйвер и клиент Postgres с нативным протоколом. Он умеет то, чего нет в <code>database/sql</code>: batch, <code>COPY</code>, нативные типы, <code>CollectRows</code>, структуры по именам колонок. Для совместимости есть адаптер <code>stdlib</code>, который регистрирует драйвер <code>"pgx"</code> для <code>database/sql</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Задача</th><th>pgx</th></tr></thead>
+      <tbody>
+        <tr><td>пул</td><td><code>pgxpool.New</code>, <code>pgxpool.Config</code>, <code>Pool.Acquire</code></td></tr>
+        <tr><td>запрос</td><td><code>Query</code>, <code>QueryRow</code>, <code>Exec</code></td></tr>
+        <tr><td>сбор строк</td><td><code>pgx.CollectRows</code>, <code>CollectOneRow</code>, <code>ForEachRow</code></td></tr>
+        <tr><td>структуры</td><td><code>pgx.RowToStructByName[T]</code>, <code>RowToStructByNameLax</code></td></tr>
+        <tr><td>массовая загрузка</td><td><code>CopyFrom</code></td></tr>
+        <tr><td>пакет запросов</td><td><code>SendBatch</code>, <code>Batch</code></td></tr>
+        <tr><td>транзакция</td><td><code>Begin</code>, <code>BeginTx</code>, <code>pgx.Tx</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>pool, err := pgxpool.New(ctx, dsn)
+if err != nil {
+    return err
+}
+defer pool.Close()
+
+rows, err := pool.Query(ctx,
+    `select id, name from users where active = $1`, true)
+if err != nil {
+    return err
+}
+
+users, err := pgx.CollectRows(rows, pgx.RowToStructByName[User])
+if err != nil {
+    return err
+}</code></pre>
+
+  <pre><code>type User struct {
+    ID   int64  `db:"id"`
+    Name string `db:"name"`
+}
+
+tag, err := pool.Exec(ctx,
+    `update users set name = $1 where id = $2`, name, id)
+if err != nil {
+    return err
+}
+fmt.Println(tag.RowsAffected())</code></pre>
+
+  <p class="is-muted"><code>RowToStructByName</code> требует, чтобы число публичных полей структуры совпадало с числом колонок; <code>Lax</code> допускает больше полей, чем колонок. Имена сопоставляются без учёта регистра, тег <code>db</code> переопределяет имя, <code>db:"-"</code> исключает поле.</p>
+</section>
+
+<section id="transactions">
+  <h2>5. Транзакции и изоляция</h2>
+
+  <p>Транзакция начинается с <code>BeginTx</code> и заканчивается <code>Commit</code> или <code>Rollback</code>. <code>defer tx.Rollback()</code> безопасен: после успешного <code>Commit</code> он вернёт <code>sql.ErrTxDone</code>, и этот результат игнорируют.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Уровень</th><th>Что гарантирует</th><th>Postgres</th></tr></thead>
+      <tbody>
+        <tr><td><code>LevelDefault</code></td><td>уровень сервера</td><td>Read Committed по умолчанию</td></tr>
+        <tr><td><code>LevelReadUncommitted</code></td><td>грязное чтение разрешено</td><td>ведёт себя как Read Committed</td></tr>
+        <tr><td><code>LevelReadCommitted</code></td><td>видны только зафиксированные строки</td><td>да</td></tr>
+        <tr><td><code>LevelRepeatableRead</code></td><td>повторное чтение стабильно</td><td>да, снимок на транзакцию</td></tr>
+        <tr><td><code>LevelSnapshot</code></td><td>снимок состояния</td><td>нет отдельного уровня</td></tr>
+        <tr><td><code>LevelSerializable</code></td><td>результат как при последовательном выполнении</td><td>да, SSI</td></tr>
+        <tr><td><code>LevelLinearizable</code></td><td>линеаризуемость</td><td>нет</td></tr>
+        <tr><td><code>LevelWriteCommitted</code></td><td>видны и незафиксированные записи</td><td>нет</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>tx, err := db.BeginTx(ctx, &amp;sql.TxOptions{
+    Isolation: sql.LevelSerializable,
+})
+if err != nil {
+    return err
+}
+defer tx.Rollback() // безопасно и после Commit
+
+if _, err := tx.ExecContext(ctx,
+    `update accounts set balance = balance - $1 where id = $2`,
+    amount, from); err != nil {
+    return err
+}
+if _, err := tx.ExecContext(ctx,
+    `update accounts set balance = balance + $1 where id = $2`,
+    amount, to); err != nil {
+    return err
+}
+
+return tx.Commit()</code></pre>
+
+  <p class="is-muted">На <code>Serializable</code> Postgres может вернуть <code>40001</code> (serialization_failure) — транзакцию нужно повторить целиком. Savepoint задаётся обычным SQL: <code>SAVEPOINT name</code>, <code>ROLLBACK TO SAVEPOINT name</code>.</p>
+</section>
+
+<section id="errors">
+  <h2>6. Ошибки и SQLSTATE</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Ошибка</th><th>Что означает</th></tr></thead>
+      <tbody>
+        <tr><td><code>sql.ErrNoRows</code></td><td><code>QueryRow.Scan</code> не нашёл строк</td></tr>
+        <tr><td><code>sql.ErrTxDone</code></td><td>транзакция уже завершена</td></tr>
+        <tr><td><code>23505</code> unique_violation</td><td>нарушено уникальное ограничение</td></tr>
+        <tr><td><code>23503</code> foreign_key_violation</td><td>нарушена внешняя ссылка</td></tr>
+        <tr><td><code>23502</code> not_null_violation</td><td>NULL в колонке <code>not null</code></td></tr>
+        <tr><td><code>40001</code> serialization_failure</td><td>конфликт сериализуемых транзакций; повторить</td></tr>
+        <tr><td><code>40P01</code> deadlock_detected</td><td>взаимная блокировка; повторить</td></tr>
+        <tr><td><code>57014</code> query_canceled</td><td>запрос отменён, например по таймауту</td></tr>
+        <tr><td><code>08006</code> connection_failure</td><td>соединение потеряно</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>var pgErr *pgconn.PgError
+if errors.As(err, &amp;pgErr) {
+    switch pgErr.Code {
+    case "23505":
+        return ErrConflict
+    case "40001", "40P01":
+        return ErrRetry
+    }
+}
+return fmt.Errorf("query: %w", err)</code></pre>
+
+  <p class="is-muted">Код SQLSTATE — стабильный контракт; текст ошибки может меняться между версиями и локалями. Сравнивать нужно код, а не сообщение. Повторять имеет смысл только транзакцию целиком и только для <code>40001</code> и <code>40P01</code>.</p>
+</section>
+
+<section id="indexes">
+  <h2>7. Индексы</h2>
+
+  <p>B-tree — индекс по умолчанию и подходит для равенства, диапазонов и сортировки. Порядок колонок в составном индексе важен: <code>(user_id, created_at)</code> помогает фильтру по <code>user_id</code> и сортировке по <code>created_at</code>, но не наоборот.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Вид</th><th>Когда</th><th>Пример</th></tr></thead>
+      <tbody>
+        <tr><td>B-tree</td><td>равенство, диапазон, <code>order by</code></td><td><code>create index on orders (user_id, created_at desc)</code></td></tr>
+        <tr><td>unique</td><td>уникальность</td><td><code>create unique index on users (lower(email))</code></td></tr>
+        <tr><td>partial</td><td>индекс только для части строк</td><td><code>... where status = 'pending'</code></td></tr>
+        <tr><td>covering</td><td>колонки только для чтения</td><td><code>... include (status, total)</code></td></tr>
+        <tr><td>GIN</td><td><code>jsonb</code>, массивы, полнотекстовый поиск</td><td><code>using gin (payload jsonb_path_ops)</code></td></tr>
+        <tr><td>GiST</td><td>геометрия, диапазоны, нечёткий поиск</td><td><code>using gist (period)</code></td></tr>
+        <tr><td>BRIN</td><td>большие таблицы, корреляция с порядком вставки</td><td><code>using brin (created_at)</code></td></tr>
+        <tr><td>hash</td><td>только равенство</td><td><code>using hash (token)</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>create index orders_user_created_idx
+    on orders (user_id, created_at desc);
+
+create index orders_pending_idx
+    on orders (created_at)
+    where status = 'pending';
+
+create index orders_covering_idx
+    on orders (user_id)
+    include (status, total);
+
+create index events_payload_idx
+    on events using gin (payload jsonb_path_ops);</code></pre>
+
+  <p class="is-muted">Индекс не бесплатен: он замедляет вставку и обновление и занимает место. Индекс на колонку с низкой селективностью (например, <code>status</code> с двумя значениями) чаще вредит, чем помогает; partial-индекс решает это, индексируя только нужное подмножество.</p>
+</section>
+
+<section id="explain">
+  <h2>8. EXPLAIN и планы</h2>
+
+  <p><code>EXPLAIN</code> показывает план, <code>EXPLAIN ANALYZE</code> — ещё и реальное выполнение. <code>BUFFERS</code> добавляет чтение страниц из кэша и с диска. Без <code>ANALYZE</code> числа — оценки планировщика, а не факты.</p>
+
+  <pre><code>explain (analyze, buffers, format text)
+select id, name
+from users
+where email = 'a@b.c';</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Узел</th><th>Что означает</th></tr></thead>
+      <tbody>
+        <tr><td><code>Seq Scan</code></td><td>последовательное чтение всей таблицы</td></tr>
+        <tr><td><code>Index Scan</code></td><td>поиск по индексу с обращением к таблице</td></tr>
+        <tr><td><code>Index Only Scan</code></td><td>все нужные колонки есть в индексе</td></tr>
+        <tr><td><code>Bitmap Index Scan</code> + <code>Bitmap Heap Scan</code></td><td>сначала собрать страницы, потом читать таблицу пачкой</td></tr>
+        <tr><td><code>Nested Loop</code></td><td>для каждой строки внешнего набора — поиск во внутреннем</td></tr>
+        <tr><td><code>Hash Join</code></td><td>хеш по меньшему набору, затем проход по большему</td></tr>
+        <tr><td><code>Merge Join</code></td><td>оба набора отсортированы и сливаются</td></tr>
+        <tr><td><code>Sort</code>, <code>HashAggregate</code>, <code>GroupAggregate</code></td><td>сортировка и агрегация</td></tr>
+        <tr><td><code>Limit</code></td><td>ранняя остановка после нужного числа строк</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Что смотреть в строке плана: <code>cost=startup..total</code> — оценка стоимости, <code>rows</code> — оценка числа строк, <code>width</code> — средняя ширина, <code>actual time=startup..total rows=N loops=N</code> — факт, <code>Buffers: shared hit/read</code> — попадания в кэш и чтения с диска.</p>
+
+  <pre><code>Limit  (cost=0.42..8.44 rows=1 width=40) (actual time=0.020..0.021 rows=1 loops=1)
+  Buffers: shared hit=3
+  -&gt;  Index Scan using users_email_idx on users
+        (cost=0.42..8.44 rows=1 width=40) (actual time=0.019..0.020 rows=1 loops=1)
+        Index Cond: (email = 'a@b.c'::text)</code></pre>
+
+  <p class="is-muted">Если <code>rows</code> в оценке и <code>actual rows</code> расходятся на порядки, планировщику не хватает статистики: помогает <code>ANALYZE table</code>. <code>Index Only Scan</code> требует visibility map, поэтому после массовых изменений нужен <code>VACUUM</code>.</p>
+</section>
+
+<section id="migrations">
+  <h2>9. Миграции</h2>
+
+  <p>Схема версионируется файлами, а не правками вручную. В Postgres DDL транзакционный: <code>create table</code>, <code>alter table</code> и <code>create index</code> можно завернуть в транзакцию вместе с записью в таблицу версий.</p>
+
+  <pre><code>create table schema_migrations (
+    version    bigint primary key,
+    applied_at timestamptz not null default now()
+);
+
+begin;
+
+alter table users add column email text;
+
+insert into schema_migrations (version) values (20261104_01);
+
+commit;</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Правило</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>миграция только вперёд</td><td>откат в production редко проверен и опасен</td></tr>
+        <tr><td>expand → migrate → contract</td><td>сначала добавить новое, потом перенести данные, потом удалить старое</td></tr>
+        <tr><td>одна миграция — один смысл</td><td>проще откатить и понять по истории</td></tr>
+        <tr><td>advisory lock</td><td>две реплики не применят миграцию одновременно</td></tr>
+        <tr><td><code>create index concurrently</code></td><td>не блокирует запись в таблицу</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>select pg_advisory_lock(42);
+-- применить миграции
+select pg_advisory_unlock(42);</code></pre>
+
+  <p class="is-muted">Инструменты: <code>golang-migrate</code>, <code>goose</code>, <code>atlas</code>. Официального инструмента в Go нет; формат файлов и таблицу версий выбирает проект.</p>
+</section>
+
+<section id="testing">
+  <h2>10. Тестирование</h2>
+
+  <p>Репозиторий проверяют на настоящем Postgres: моки скрывают блокировки, типы, NULL и ограничения. Варианты — локальный сервер, Docker через <code>testcontainers-go</code> или общий тестовый экземпляр в CI.</p>
+
+  <p>Быстрый приём — транзакция на тест с откатом: каждый тест видит чистое состояние и не мешает другим.</p>
+
+  <pre><code>func TestUserRepository(t *testing.T) {
+    ctx := context.Background()
+
+    pool, err := pgxpool.New(ctx, os.Getenv("TEST_DATABASE_URL"))
+    if err != nil {
+        t.Fatal(err)
+    }
+    t.Cleanup(pool.Close)
+
+    tx, err := pool.Begin(ctx)
+    if err != nil {
+        t.Fatal(err)
+    }
+    t.Cleanup(func() { _ = tx.Rollback(ctx) })
+
+    repo := NewUserRepository(tx)
+    if err := repo.Create(ctx, User{Name: "Аня"}); err != nil {
+        t.Fatal(err)
+    }
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Что проверять</th><th>Как</th></tr></thead>
+      <tbody>
+        <tr><td>SQL и типы</td><td>реальный Postgres, не мок</td></tr>
+        <tr><td>ограничения</td><td>вставить дубль и ожидать <code>23505</code></td></tr>
+        <tr><td>NULL</td><td>строка с NULL и <code>Null[T]</code>/указатель</td></tr>
+        <tr><td>транзакции</td><td>откат и повтор при <code>40001</code></td></tr>
+        <tr><td>изоляция</td><td>две транзакции и конфликт</td></tr>
+        <tr><td>изоляция тестов</td><td>откат на тест или отдельная схема</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="sources">
+  <h2>11. Первоисточники</h2>
+  <ul>
+    <li><a href="https://pkg.go.dev/database/sql">pkg.go.dev/database/sql</a> — <code>DB</code>, <code>Tx</code>, <code>Null[T]</code>, уровни изоляции</li>
+    <li><a href="https://pkg.go.dev/github.com/jackc/pgx/v5">pkg.go.dev/github.com/jackc/pgx/v5</a> — соединение, запросы, <code>CollectRows</code></li>
+    <li><a href="https://pkg.go.dev/github.com/jackc/pgx/v5/pgxpool">pkg.go.dev/github.com/jackc/pgx/v5/pgxpool</a> — пул соединений</li>
+    <li><a href="https://pkg.go.dev/github.com/jackc/pgx/v5/pgconn">pkg.go.dev/github.com/jackc/pgx/v5/pgconn</a> — <code>PgError</code> и SQLSTATE</li>
+    <li><a href="https://www.postgresql.org/docs/current/using-explain.html">PostgreSQL: Using EXPLAIN</a> — чтение планов</li>
+    <li><a href="https://www.postgresql.org/docs/current/sql-explain.html">PostgreSQL: EXPLAIN</a> — параметры <code>ANALYZE</code>, <code>BUFFERS</code>, <code>FORMAT</code></li>
+    <li><a href="https://www.postgresql.org/docs/current/indexes.html">PostgreSQL: Indexes</a> — виды индексов и когда их применять</li>
+    <li><a href="https://www.postgresql.org/docs/current/errcodes-appendix.html">PostgreSQL: Error Codes</a> — SQLSTATE</li>
+    <li><a href="https://www.postgresql.org/docs/current/transaction-iso.html">PostgreSQL: Transaction Isolation</a> — уровни изоляции</li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>

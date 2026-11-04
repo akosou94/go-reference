@@ -67,7 +67,7 @@
 
 <div class="callout callout--info">
   <p>Каждая строка — сущность и ссылка на место, где она описана. Имена взяты из заголовков и из первых колонок таблиц этих страниц.</p>
-  <p>Всего записей: <strong>377</strong> — Язык 91 · Параллелизм 57 · Рантайм 58 · Стандартная библиотека 107 · HTTP-сервис 64.</p>
+  <p>Всего записей: <strong>452</strong> — Язык 91 · Параллелизм 57 · Рантайм 58 · Стандартная библиотека 107 · HTTP-сервис 64 · SQL и Postgres 75.</p>
 </div>
 
 <section id="filter">
@@ -84,6 +84,8 @@
 <h3 id="grp-num" class="idx-group">0–9</h3>
 <ul class="idx-list">
 <li><a href="./stdlib.html#fmt"><code>%%</code></a> <span class="idx-src">Стандартная библиотека · 3. fmt</span></li>
+<li><a href="./sql.html#errors"><code>08006</code> connection_failure</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./sql.html#database-sql">1. database/sql: пул и жизненный цикл</a> <span class="idx-src">SQL и Postgres · 1. database/sql: пул и жизненный цикл</span></li>
 <li><a href="./stdlib.html#strings">1. strings и bytes</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./runtime.html#binary">1. Бинарник и рантайм</a> <span class="idx-src">Рантайм · 1. Бинарник и рантайм</span></li>
 <li><a href="./concurrency.html#goroutines">1. Горутины</a> <span class="idx-src">Параллелизм · 1. Горутины</span></li>
@@ -95,8 +97,10 @@
 <li><a href="./language.html#errors">10. Ошибки, panic, recover</a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
 <li><a href="./concurrency.html#sources">10. Первоисточники</a> <span class="idx-src">Параллелизм · 10. Первоисточники</span></li>
 <li><a href="./runtime.html#sources">10. Первоисточники</a> <span class="idx-src">Рантайм · 10. Первоисточники</span></li>
+<li><a href="./sql.html#testing">10. Тестирование</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./language.html#defer">11. defer</a> <span class="idx-src">Язык · 11. defer</span></li>
 <li><a href="./stdlib.html#embed">11. embed</a> <span class="idx-src">Стандартная библиотека · 11. embed</span></li>
+<li><a href="./sql.html#sources">11. Первоисточники</a> <span class="idx-src">SQL и Postgres · 11. Первоисточники</span></li>
 <li><a href="./http-service.html#testing">11. Тестирование</a> <span class="idx-src">HTTP-сервис · 11. Тестирование</span></li>
 <li><a href="./language.html#control">12. Замыкания, циклы, switch</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
 <li><a href="./stdlib.html#sources">12. Первоисточники</a> <span class="idx-src">Стандартная библиотека · 12. Первоисточники</span></li>
@@ -104,12 +108,17 @@
 <li><a href="./language.html#sources">13. Первоисточники</a> <span class="idx-src">Язык · 13. Первоисточники</span></li>
 <li><a href="./http-service.html#server">2. Server и таймауты</a> <span class="idx-src">HTTP-сервис · 2. Server и таймауты</span></li>
 <li><a href="./stdlib.html#strconv">2. strconv</a> <span class="idx-src">Стандартная библиотека · 2. strconv</span></li>
+<li><a href="./sql.html#queries">2. Запросы и сканирование</a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
 <li><a href="./concurrency.html#channels">2. Каналы</a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./http-service.html#path">2. Маршрут</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
 <li><a href="./language.html#values">2. Переменные, константы, zero value</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
 <li><a href="./runtime.html#scheduler">2. Планировщик: G, M, P</a> <span class="idx-src">Рантайм · 2. Планировщик: G, M, P</span></li>
+<li><a href="./sql.html#errors"><code>23502</code> not_null_violation</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./sql.html#errors"><code>23503</code> foreign_key_violation</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./sql.html#errors"><code>23505</code> unique_violation</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./stdlib.html#fmt">3. fmt</a> <span class="idx-src">Стандартная библиотека · 3. fmt</span></li>
 <li><a href="./http-service.html#path">3. Middleware</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
+<li><a href="./sql.html#null">3. NULL</a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
 <li><a href="./concurrency.html#select">3. select</a> <span class="idx-src">Параллелизм · 3. select</span></li>
 <li><a href="./http-service.html#mux">3. ServeMux и маршруты</a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
 <li><a href="./language.html#types">3. Базовые типы и преобразования</a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
@@ -117,26 +126,34 @@
 <li><a href="./http-service.html#path">4. Handler</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
 <li><a href="./http-service.html#middleware">4. Handler и middleware</a> <span class="idx-src">HTTP-сервис · 4. Handler и middleware</span></li>
 <li><a href="./stdlib.html#io">4. io, io/fs, bufio</a> <span class="idx-src">Стандартная библиотека · 4. io, io/fs, bufio</span></li>
+<li><a href="./sql.html#pgx">4. pgx</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 <li><a href="./concurrency.html#sync">4. sync: мьютексы, WaitGroup, Once, Pool, Map</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
 <li><a href="./runtime.html#allocator">4. Аллокатор памяти</a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
 <li><a href="./language.html#strings">4. Строки, байты, руны</a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./sql.html#errors"><code>40001</code> serialization_failure</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./sql.html#errors"><code>40P01</code> deadlock_detected</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./concurrency.html#context">5. context</a> <span class="idx-src">Параллелизм · 5. context</span></li>
 <li><a href="./stdlib.html#os">5. os, os/exec, path/filepath</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
 <li><a href="./http-service.html#request">5. Request: тело, лимиты, контекст</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./language.html#slices">5. Массивы и срезы</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
 <li><a href="./runtime.html#gc">5. Сборка мусора</a> <span class="idx-src">Рантайм · 5. Сборка мусора</span></li>
 <li><a href="./http-service.html#path">5. Сервис</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
+<li><a href="./sql.html#transactions">5. Транзакции и изоляция</a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#errors"><code>57014</code> query_canceled</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./runtime.html#gc-tuning">6. GOGC и GOMEMLIMIT</a> <span class="idx-src">Рантайм · 6. GOGC и GOMEMLIMIT</span></li>
 <li><a href="./http-service.html#response">6. Response: статус, заголовки, JSON</a> <span class="idx-src">HTTP-сервис · 6. Response: статус, заголовки, JSON</span></li>
 <li><a href="./stdlib.html#time">6. time</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./language.html#maps">6. Мапы</a> <span class="idx-src">Язык · 6. Мапы</span></li>
 <li><a href="./concurrency.html#memory-model">6. Модель памяти и data race</a> <span class="idx-src">Параллелизм · 6. Модель памяти и data race</span></li>
 <li><a href="./http-service.html#path">6. Ответ</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
+<li><a href="./sql.html#errors">6. Ошибки и SQLSTATE</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./stdlib.html#json">7. encoding/json</a> <span class="idx-src">Стандартная библиотека · 7. encoding/json</span></li>
 <li><a href="./runtime.html#escape">7. Escape analysis</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
+<li><a href="./sql.html#indexes">7. Индексы</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./http-service.html#errors">7. Ошибки как контракт</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./concurrency.html#patterns">7. Паттерны</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
 <li><a href="./language.html#structs">7. Структуры, методы, embedding</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+<li><a href="./sql.html#explain">8. EXPLAIN и планы</a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./http-service.html#shutdown">8. Graceful shutdown</a> <span class="idx-src">HTTP-сервис · 8. Graceful shutdown</span></li>
 <li><a href="./stdlib.html#http">8. net/http</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
 <li><a href="./language.html#interfaces">8. Интерфейсы</a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
@@ -146,11 +163,13 @@
 <li><a href="./language.html#generics">9. Дженерики</a> <span class="idx-src">Язык · 9. Дженерики</span></li>
 <li><a href="./runtime.html#diagnostics">9. Диагностика</a> <span class="idx-src">Рантайм · 9. Диагностика</span></li>
 <li><a href="./http-service.html#client">9. Клиент</a> <span class="idx-src">HTTP-сервис · 9. Клиент</span></li>
+<li><a href="./sql.html#migrations">9. Миграции</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./concurrency.html#testing">9. Тестирование конкурентного кода</a> <span class="idx-src">Параллелизм · 9. Тестирование конкурентного кода</span></li>
 <li><a href="./language.html#packages"><code>_</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 </ul>
 <h3 id="grp-a" class="idx-group">A</h3>
 <ul class="idx-list">
+<li><a href="./sql.html#migrations">advisory lock</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./language.html#types"><code>any</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#generics"><code>any</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
 <li><a href="./concurrency.html#memory-model"><code>atomic</code></a> <span class="idx-src">Параллелизм · 6. Модель памяти и data race</span></li>
@@ -158,10 +177,13 @@
 <h3 id="grp-b" class="idx-group">B</h3>
 <ul class="idx-list">
 <li><a href="./language.html#strings"><code>[]byte(s)</code>, <code>string(b)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./sql.html#indexes">B-tree</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./http-service.html#server"><code>BaseContext</code></a> <span class="idx-src">HTTP-сервис · 2. Server и таймауты</span></li>
+<li><a href="./sql.html#explain"><code>Bitmap Index Scan</code> + <code>Bitmap Heap Scan</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./runtime.html#pprof"><code>block</code></a> <span class="idx-src">Рантайм · 8. Профилирование</span></li>
 <li><a href="./language.html#values"><code>bool</code></a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
 <li><a href="./language.html#types"><code>bool</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./sql.html#indexes">BRIN</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./language.html#types"><code>byte</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 </ul>
 <h3 id="grp-c" class="idx-group">C</h3>
@@ -174,13 +196,16 @@
 <li><a href="./http-service.html#client"><code>Client.Timeout</code></a> <span class="idx-src">HTTP-сервис · 9. Клиент</span></li>
 <li><a href="./concurrency.html#channels"><code>close(ch)</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./stdlib.html#collections"><code>cmp</code></a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
+<li><a href="./sql.html#null"><code>COALESCE(col, '')</code></a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
 <li><a href="./language.html#generics"><code>comparable</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
 <li><a href="./language.html#types"><code>complex64</code>, <code>complex128</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./concurrency.html#cond-atomic">Cond и atomic</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
 <li><a href="./http-service.html#server"><code>ConnContext</code></a> <span class="idx-src">HTTP-сервис · 2. Server и таймауты</span></li>
 <li><a href="./concurrency.html#context"><code>context.Background()</code></a> <span class="idx-src">Параллелизм · 5. context</span></li>
 <li><a href="./concurrency.html#context"><code>context.TODO()</code></a> <span class="idx-src">Параллелизм · 5. context</span></li>
+<li><a href="./sql.html#indexes">covering</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./runtime.html#pprof"><code>cpu</code></a> <span class="idx-src">Рантайм · 8. Профилирование</span></li>
+<li><a href="./sql.html#migrations"><code>create index concurrently</code></a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./stdlib.html#http">CSRF [1.25]</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
 </ul>
 <h3 id="grp-d" class="idx-group">D</h3>
@@ -198,6 +223,8 @@
 <li><a href="./language.html#errors"><code>errors.Join(errs...)</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
 <li><a href="./language.html#errors"><code>errors.New</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
 <li><a href="./http-service.html#mux"><code>example.com/</code></a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
+<li><a href="./sql.html#queries"><code>ExecContext</code></a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
+<li><a href="./sql.html#migrations">expand → migrate → contract</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./runtime.html#diagnostics"><code>expvar</code></a> <span class="idx-src">Рантайм · 9. Диагностика</span></li>
 </ul>
 <h3 id="grp-f" class="idx-group">F</h3>
@@ -225,6 +252,8 @@
 <li><a href="./http-service.html#mux"><code>GET /files/{path...}</code></a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
 <li><a href="./http-service.html#mux"><code>GET /users/{$}</code></a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
 <li><a href="./http-service.html#mux"><code>GET /users/{id}</code></a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
+<li><a href="./sql.html#indexes">GIN</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
+<li><a href="./sql.html#indexes">GiST</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./concurrency.html#testing"><code>go test -race</code></a> <span class="idx-src">Параллелизм · 9. Тестирование конкурентного кода</span></li>
 <li><a href="./runtime.html#diagnostics"><code>go tool nm</code>, <code>go tool objdump</code></a> <span class="idx-src">Рантайм · 9. Диагностика</span></li>
 <li><a href="./concurrency.html#testing"><code>go vet</code></a> <span class="idx-src">Параллелизм · 9. Тестирование конкурентного кода</span></li>
@@ -238,6 +267,8 @@
 <h3 id="grp-h" class="idx-group">H</h3>
 <ul class="idx-list">
 <li><a href="./stdlib.html#slog"><code>HandlerOptions</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
+<li><a href="./sql.html#indexes">hash</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
+<li><a href="./sql.html#explain"><code>Hash Join</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./runtime.html#pprof"><code>heap</code></a> <span class="idx-src">Рантайм · 8. Профилирование</span></li>
 </ul>
 <h3 id="grp-i" class="idx-group">I</h3>
@@ -247,6 +278,8 @@
 <li><a href="./language.html#packages"><code>import . "fmt"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./language.html#packages"><code>import _ "net/http/pprof"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./language.html#packages"><code>import f "fmt"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./sql.html#explain"><code>Index Only Scan</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
+<li><a href="./sql.html#explain"><code>Index Scan</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./language.html#types"><code>int</code>, <code>uint</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#generics"><code>int | string</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
 <li><a href="./language.html#types"><code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
@@ -287,7 +320,16 @@
 <li><a href="./concurrency.html#channels"><code>len(ch)</code> / <code>cap(ch)</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./language.html#maps"><code>len(m)</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
 <li><a href="./language.html#strings"><code>len(s)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./sql.html#transactions"><code>LevelDefault</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#transactions"><code>LevelLinearizable</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#transactions"><code>LevelReadCommitted</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#transactions"><code>LevelReadUncommitted</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#transactions"><code>LevelRepeatableRead</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#transactions"><code>LevelSerializable</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#transactions"><code>LevelSnapshot</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
 <li><a href="./stdlib.html#slog"><code>LevelVar</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
+<li><a href="./sql.html#transactions"><code>LevelWriteCommitted</code></a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
+<li><a href="./sql.html#explain"><code>Limit</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./stdlib.html#slog"><code>LogValuer</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
 </ul>
 <h3 id="grp-m" class="idx-group">M</h3>
@@ -304,6 +346,7 @@
 <li><a href="./http-service.html#server"><code>MaxHeaderBytes</code></a> <span class="idx-src">HTTP-сервис · 2. Server и таймауты</span></li>
 <li><a href="./runtime.html#allocator"><code>mcache</code></a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
 <li><a href="./runtime.html#allocator"><code>mcentral</code></a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
+<li><a href="./sql.html#explain"><code>Merge Join</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./runtime.html#allocator"><code>mheap</code></a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
 <li><a href="./language.html#types"><code>min(x, y, …)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#builtins">min, max, clear</a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
@@ -314,10 +357,12 @@
 </ul>
 <h3 id="grp-n" class="idx-group">N</h3>
 <ul class="idx-list">
+<li><a href="./sql.html#explain"><code>Nested Loop</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./runtime.html#scheduler">netpoller</a> <span class="idx-src">Рантайм · 2. Планировщик: G, M, P</span></li>
 <li><a href="./language.html#new-make">new и make</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
 <li><a href="./stdlib.html#slog"><code>NewTextHandler</code>, <code>NewJSONHandler</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
 <li><a href="./language.html#typed-nil">nil-интерфейс и типизированный nil</a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+<li><a href="./sql.html#testing">NULL</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 </ul>
 <h3 id="grp-o" class="idx-group">O</h3>
 <ul class="idx-list">
@@ -329,12 +374,16 @@
 <ul class="idx-list">
 <li><a href="./stdlib.html#fmt"><code>%p</code></a> <span class="idx-src">Стандартная библиотека · 3. fmt</span></li>
 <li><a href="./concurrency.html#goroutines"><code>P</code></a> <span class="idx-src">Параллелизм · 1. Горутины</span></li>
+<li><a href="./sql.html#indexes">partial</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./concurrency.html#pipeline">Pipeline</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
 <li><a href="./concurrency.html#pool">Pool</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
+<li><a href="./sql.html#queries"><code>PrepareContext</code></a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
 </ul>
 <h3 id="grp-q" class="idx-group">Q</h3>
 <ul class="idx-list">
 <li><a href="./http-service.html#request">query-параметры</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
+<li><a href="./sql.html#queries"><code>QueryContext</code></a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
+<li><a href="./sql.html#queries"><code>QueryRowContext</code></a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
 </ul>
 <h3 id="grp-r" class="idx-group">R</h3>
 <ul class="idx-list">
@@ -349,13 +398,25 @@
 <h3 id="grp-s" class="idx-group">S</h3>
 <ul class="idx-list">
 <li><a href="./stdlib.html#fmt"><code>%s</code></a> <span class="idx-src">Стандартная библиотека · 3. fmt</span></li>
+<li><a href="./sql.html#null"><code>*string</code>, <code>*int</code></a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
 <li><a href="./language.html#strings"><code>s[i]</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./sql.html#explain"><code>Seq Scan</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
+<li><a href="./sql.html#database-sql"><code>SetConnMaxIdleTime</code></a> <span class="idx-src">SQL и Postgres · 1. database/sql: пул и жизненный цикл</span></li>
+<li><a href="./sql.html#database-sql"><code>SetConnMaxLifetime</code></a> <span class="idx-src">SQL и Postgres · 1. database/sql: пул и жизненный цикл</span></li>
 <li><a href="./stdlib.html#slog"><code>SetDefault</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
+<li><a href="./sql.html#database-sql"><code>SetMaxIdleConns</code></a> <span class="idx-src">SQL и Postgres · 1. database/sql: пул и жизненный цикл</span></li>
+<li><a href="./sql.html#database-sql"><code>SetMaxOpenConns</code></a> <span class="idx-src">SQL и Postgres · 1. database/sql: пул и жизненный цикл</span></li>
 <li><a href="./stdlib.html#collections"><code>slices</code></a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
 <li><a href="./stdlib.html#collections"><code>slices</code>: итераторы</a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
 <li><a href="./stdlib.html#collections"><code>slices</code>: сортировка</a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
 <li><a href="./stdlib.html#slog"><code>slog.New</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
 <li><a href="./stdlib.html#collections"><code>sort</code></a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
+<li><a href="./sql.html#explain"><code>Sort</code>, <code>HashAggregate</code>, <code>GroupAggregate</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
+<li><a href="./sql.html#testing">SQL и типы</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
+<li><a href="./sql.html#errors"><code>sql.ErrNoRows</code></a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./sql.html#errors"><code>sql.ErrTxDone</code></a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./sql.html#null"><code>sql.Null[T]</code></a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
+<li><a href="./sql.html#null"><code>sql.NullString</code></a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
 <li><a href="./language.html#values"><code>string</code></a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
 <li><a href="./language.html#types"><code>string</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#control"><code>string</code></a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
@@ -386,6 +447,7 @@
 <li><a href="./http-service.html#mux"><code>/users/</code></a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
 <li><a href="./language.html#types"><code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>uint64</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#types"><code>uintptr</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./sql.html#indexes">unique</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./language.html#packages"><code>User</code>, <code>NewUser</code>, <code>(*User).Save</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./language.html#packages"><code>user</code>, <code>newUser</code>, <code>save</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./language.html#strings"><code>utf8.RuneCountInString(s)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
@@ -452,12 +514,15 @@
 <li><a href="./stdlib.html#strings">замена</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./runtime.html#escape">запись в глобальную переменную</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 <li><a href="./stdlib.html#http">запрос</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
+<li><a href="./sql.html#pgx">запрос</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 <li><a href="./runtime.html#escape">захват замыканием, которое живёт дольше</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 </ul>
 <h3 id="grp-cyr-i" class="idx-group">И</h3>
 <ul class="idx-list">
 <li><a href="./stdlib.html#time">из Unix</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./runtime.html#stacks">изменение лимита</a> <span class="idx-src">Рантайм · 3. Стеки горутин</span></li>
+<li><a href="./sql.html#testing">изоляция</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
+<li><a href="./sql.html#testing">изоляция тестов</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./language.html#init">Инициализация пакета</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./stdlib.html#strings">итераторы [1.24]</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 </ul>
@@ -488,8 +553,10 @@
 <li><a href="./stdlib.html#http">маршрутизация</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
 <li><a href="./language.html#values">массив</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
 <li><a href="./language.html#control">массив, указатель на массив, срез</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+<li><a href="./sql.html#pgx">массовая загрузка</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 <li><a href="./stdlib.html#os">метаданные</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
 <li><a href="./http-service.html#observability">метрика <code>http_requests_total</code></a> <span class="idx-src">HTTP-сервис · 10. Наблюдаемость</span></li>
+<li><a href="./sql.html#migrations">миграция только вперёд</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./runtime.html#gc-tuning">мягкий предел памяти</a> <span class="idx-src">Рантайм · 6. GOGC и GOMEMLIMIT</span></li>
 </ul>
 <h3 id="grp-cyr-n" class="idx-group">Н</h3>
@@ -505,7 +572,9 @@
 </ul>
 <h3 id="grp-cyr-o" class="idx-group">О</h3>
 <ul class="idx-list">
+<li><a href="./sql.html#testing">ограничения</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./http-service.html#request">ограничить тело</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
+<li><a href="./sql.html#migrations">одна миграция — один смысл</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./stdlib.html#time">округление</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./stdlib.html#os">окружение</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
 <li><a href="./stdlib.html#http">ответ</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
@@ -520,6 +589,7 @@
 </ul>
 <h3 id="grp-cyr-p" class="idx-group">П</h3>
 <ul class="idx-list">
+<li><a href="./sql.html#pgx">пакет запросов</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 <li><a href="./concurrency.html#channels">повторное <code>close(ch)</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./http-service.html#request">подстановка пути</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./stdlib.html#strings">поиск</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
@@ -534,6 +604,7 @@
 <li><a href="./runtime.html#gc-tuning">принудительный цикл</a> <span class="idx-src">Рантайм · 6. GOGC и GOMEMLIMIT</span></li>
 <li><a href="./language.html#slices">Присваивание</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
 <li><a href="./stdlib.html#os">проверка ошибок</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
+<li><a href="./sql.html#pgx">пул</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 </ul>
 <h3 id="grp-cyr-r" class="idx-group">Р</h3>
 <ul class="idx-list">
@@ -544,6 +615,7 @@
 </ul>
 <h3 id="grp-cyr-s" class="idx-group">С</h3>
 <ul class="idx-list">
+<li><a href="./sql.html#pgx">сбор строк</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 <li><a href="./stdlib.html#strings">сборка</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./concurrency.html#patterns">семафор</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
 <li><a href="./stdlib.html#http">сервер</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
@@ -553,6 +625,7 @@
 <li><a href="./stdlib.html#time">сравнение</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./language.html#slices">Сравнение <code>==</code></a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
 <li><a href="./language.html#values">структура</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./sql.html#pgx">структуры</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 </ul>
 <h3 id="grp-cyr-t" class="idx-group">Т</h3>
 <ul class="idx-list">
@@ -562,6 +635,8 @@
 <li><a href="./stdlib.html#time">текущее время</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./http-service.html#request">тело</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./stdlib.html#http">тесты</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
+<li><a href="./sql.html#testing">транзакции</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
+<li><a href="./sql.html#pgx">транзакция</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
 <li><a href="./http-service.html#observability">трассировка</a> <span class="idx-src">HTTP-сервис · 10. Наблюдаемость</span></li>
 </ul>
 <h3 id="grp-cyr-u" class="idx-group">У</h3>
