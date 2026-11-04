@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Указатель</title>
+<link rel="stylesheet" href="assets/reference.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<script src="assets/reference.js"></script>
+</head>
+<body>
+<main class="reference" id="top">
+
+<div class="refside">
+<nav class="refnav refnav--rows" aria-label="Справочники">
+  <div class="refnav__row">
+    <span class="refnav__label">Справочники</span>
+    <a href="./index.html">Главная</a>
+    <span class="refnav__here" aria-current="page">Указатель</span>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Язык и рантайм</span>
+    <a href="./language.html">Язык</a>
+    <a href="./concurrency.html">Параллелизм</a>
+    <a href="./runtime.html">Рантайм</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Практика</span>
+    <a href="./stdlib.html">Стандартная библиотека</a>
+    <a href="./http-service.html">HTTP-сервис</a>
+    <a href="./sql.html">SQL и Postgres</a>
+    <a href="./tooling.html">Инструменты</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Основы</span>
+    <a href="./architecture.html">Архитектура</a>
+    <a href="./examples.html">Примеры кода</a>
+  </div>
+</nav>
+
+<aside class="refkeys" aria-label="Горячие клавиши">
+  <span class="refkeys__title">Горячие клавиши</span>
+  <ul>
+    <li><kbd>/</kbd> — поиск по странице; <kbd>Enter</kbd> — следующее совпадение</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — поиск по всем справочникам (<kbd>@</kbd> — разделы)</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — в палитре вниз, <kbd>+Shift</kbd> — вверх</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> — палитра команд: что можно сделать</li>
+    <li><kbd>[</kbd> <kbd>]</kbd> — предыдущий / следующий раздел</li>
+    <li><kbd>j</kbd> / <kbd>k</kbd> — скролл вниз / вверх</li>
+    <li><kbd>g</kbd> <kbd>g</kbd> — в начало страницы</li>
+    <li><kbd>G</kbd> — в конец страницы</li>
+    <li><kbd>t</kbd> — скрыть оглавление</li>
+    <li><kbd>n</kbd> — показать/скрыть навигацию</li>
+    <li><kbd>z</kbd> — Zen-режим: только текст</li>
+    <li><kbd>y</kbd> — ссылка на раздел</li>
+    <li><kbd>Esc</kbd> — очистить поиск и снять фокус; в Zen — выйти</li>
+  </ul>
+</aside>
+</div>
+
+<header class="reference-header">
+  <p class="reference-meta">Указатель</p>
+  <h1>Указатель</h1>
+  <p class="lead">Все сущности из справочников на одной странице: типы, функции, методы, поля, флаги и термины. Начни вводить имя — список отфильтруется.</p>
+  <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
+</header>
+
+<div class="callout callout--info">
+  <p>Каждая строка — сущность и ссылка на место, где она описана. Имена взяты из заголовков и из первых колонок таблиц этих страниц.</p>
+  <p>Всего записей: <strong>91</strong> — Язык 91.</p>
+</div>
+
+<section id="filter">
+  <h2>Фильтр</h2>
+  <div class="refsearch">
+    <input type="search" id="idxFilter" placeholder="Например: comparable, errors.Is, defer, iota…" autocomplete="off" aria-label="Фильтр по указателю">
+  </div>
+  <p class="is-muted" id="idxCount" role="status">Показаны все записи.</p>
+</section>
+
+<section id="index">
+  <h2>Указатель</h2>
+  <p class="idx-jump"><a href="#grp-num">0–9</a> · <a href="#grp-a">A</a> · <a href="#grp-b">B</a> · <a href="#grp-c">C</a> · <a href="#grp-d">D</a> · <a href="#grp-e">E</a> · <a href="#grp-f">F</a> · <a href="#grp-i">I</a> · <a href="#grp-l">L</a> · <a href="#grp-m">M</a> · <a href="#grp-n">N</a> · <a href="#grp-r">R</a> · <a href="#grp-s">S</a> · <a href="#grp-t">T</a> · <a href="#grp-u">U</a> · <a href="#grp-v">V</a> · <a href="#grp-z">Z</a> · <a href="#grp-cyr-v">В</a> · <a href="#grp-cyr-d">Д</a> · <a href="#grp-cyr-i">И</a> · <a href="#grp-cyr-k">К</a> · <a href="#grp-cyr-m">М</a> · <a href="#grp-cyr-n">Н</a> · <a href="#grp-cyr-p">П</a> · <a href="#grp-cyr-s">С</a> · <a href="#grp-cyr-u">У</a> · <a href="#grp-cyr-f">Ф</a> · <a href="#grp-cyr-ch">Ч</a> · <a href="#grp-cyr-e">Э</a></p>
+<h3 id="grp-num" class="idx-group">0–9</h3>
+<ul class="idx-list">
+<li><a href="./language.html#packages">1. Пакеты, файлы, видимость</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#errors">10. Ошибки, panic, recover</a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+<li><a href="./language.html#defer">11. defer</a> <span class="idx-src">Язык · 11. defer</span></li>
+<li><a href="./language.html#control">12. Замыкания, циклы, switch</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+<li><a href="./language.html#sources">13. Первоисточники</a> <span class="idx-src">Язык · 13. Первоисточники</span></li>
+<li><a href="./language.html#values">2. Переменные, константы, zero value</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./language.html#types">3. Базовые типы и преобразования</a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#strings">4. Строки, байты, руны</a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./language.html#slices">5. Массивы и срезы</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+<li><a href="./language.html#maps">6. Мапы</a> <span class="idx-src">Язык · 6. Мапы</span></li>
+<li><a href="./language.html#structs">7. Структуры, методы, embedding</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+<li><a href="./language.html#interfaces">8. Интерфейсы</a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+<li><a href="./language.html#generics">9. Дженерики</a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+<li><a href="./language.html#packages"><code>_</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+</ul>
+<h3 id="grp-a" class="idx-group">A</h3>
+<ul class="idx-list">
+<li><a href="./language.html#types"><code>any</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#generics"><code>any</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+</ul>
+<h3 id="grp-b" class="idx-group">B</h3>
+<ul class="idx-list">
+<li><a href="./language.html#strings"><code>[]byte(s)</code>, <code>string(b)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./language.html#values"><code>bool</code></a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./language.html#types"><code>bool</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#types"><code>byte</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+</ul>
+<h3 id="grp-c" class="idx-group">C</h3>
+<ul class="idx-list">
+<li><a href="./language.html#types"><code>clear(m)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#maps"><code>clear(m)</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
+<li><a href="./language.html#types"><code>clear(s)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#generics"><code>comparable</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+<li><a href="./language.html#types"><code>complex64</code>, <code>complex128</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+</ul>
+<h3 id="grp-d" class="idx-group">D</h3>
+<ul class="idx-list">
+<li><a href="./language.html#maps"><code>delete(m, k)</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
+</ul>
+<h3 id="grp-e" class="idx-group">E</h3>
+<ul class="idx-list">
+<li><a href="./language.html#types"><code>error</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#errors"><code>errors.As(err, &amp;target)</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+<li><a href="./language.html#errors"><code>errors.Is(err, target)</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+<li><a href="./language.html#errors"><code>errors.Join(errs...)</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+<li><a href="./language.html#errors"><code>errors.New</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+</ul>
+<h3 id="grp-f" class="idx-group">F</h3>
+<ul class="idx-list">
+<li><a href="./language.html#types"><code>float32</code>, <code>float64</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#errors"><code>fmt.Errorf("%w … %w", e1, e2)</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+<li><a href="./language.html#errors"><code>fmt.Errorf("%w", err)</code></a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
+<li><a href="./language.html#strings"><code>for i, r := range s</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./language.html#maps"><code>for k := range m</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
+<li><a href="./language.html#structs"><code>func (t *T) M()</code></a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+<li><a href="./language.html#structs"><code>func (t T) M()</code></a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+</ul>
+<h3 id="grp-i" class="idx-group">I</h3>
+<ul class="idx-list">
+<li><a href="./language.html#packages"><code>import "fmt"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#packages"><code>import . "fmt"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#packages"><code>import _ "net/http/pprof"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#packages"><code>import f "fmt"</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#types"><code>int</code>, <code>uint</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#generics"><code>int | string</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+<li><a href="./language.html#types"><code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#generics"><code>interface{ M() }</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+<li><a href="./language.html#generics"><code>~int</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+</ul>
+<h3 id="grp-l" class="idx-group">L</h3>
+<ul class="idx-list">
+<li><a href="./language.html#slices"><code>len</code> и <code>cap</code></a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+<li><a href="./language.html#maps"><code>len(m)</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
+<li><a href="./language.html#strings"><code>len(s)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+</ul>
+<h3 id="grp-m" class="idx-group">M</h3>
+<ul class="idx-list">
+<li><a href="./language.html#maps"><code>m[k]</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
+<li><a href="./language.html#maps"><code>m[k] = v</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
+<li><a href="./language.html#types"><code>max(x, y, …)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#types"><code>min(x, y, …)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#builtins">min, max, clear</a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+</ul>
+<h3 id="grp-n" class="idx-group">N</h3>
+<ul class="idx-list">
+<li><a href="./language.html#new-make">new и make</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./language.html#typed-nil">nil-интерфейс и типизированный nil</a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+</ul>
+<h3 id="grp-r" class="idx-group">R</h3>
+<ul class="idx-list">
+<li><a href="./language.html#types"><code>rune</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+</ul>
+<h3 id="grp-s" class="idx-group">S</h3>
+<ul class="idx-list">
+<li><a href="./language.html#strings"><code>s[i]</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./language.html#values"><code>string</code></a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./language.html#types"><code>string</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#control"><code>string</code></a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+<li><a href="./language.html#interfaces"><code>switch v := x.(type)</code></a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+</ul>
+<h3 id="grp-t" class="idx-group">T</h3>
+<ul class="idx-list">
+<li><a href="./language.html#assertions">Type assertion и type switch</a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+</ul>
+<h3 id="grp-u" class="idx-group">U</h3>
+<ul class="idx-list">
+<li><a href="./language.html#types"><code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>uint64</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#types"><code>uintptr</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./language.html#packages"><code>User</code>, <code>NewUser</code>, <code>(*User).Save</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#packages"><code>user</code>, <code>newUser</code>, <code>save</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#strings"><code>utf8.RuneCountInString(s)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+</ul>
+<h3 id="grp-v" class="idx-group">V</h3>
+<ul class="idx-list">
+<li><a href="./language.html#interfaces"><code>v := x.(T)</code></a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+<li><a href="./language.html#interfaces"><code>v, ok := x.(T)</code></a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+</ul>
+<h3 id="grp-z" class="idx-group">Z</h3>
+<ul class="idx-list">
+<li><a href="./language.html#slices">Zero value</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+</ul>
+<h3 id="grp-cyr-v" class="idx-group">В</h3>
+<ul class="idx-list">
+<li><a href="./language.html#embedding">Встраивание</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+</ul>
+<h3 id="grp-cyr-d" class="idx-group">Д</h3>
+<ul class="idx-list">
+<li><a href="./language.html#slices">Длина в типе</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+</ul>
+<h3 id="grp-cyr-i" class="idx-group">И</h3>
+<ul class="idx-list">
+<li><a href="./language.html#init">Инициализация пакета</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+</ul>
+<h3 id="grp-cyr-k" class="idx-group">К</h3>
+<ul class="idx-list">
+<li><a href="./language.html#control">канал</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+<li><a href="./language.html#constants">Константы и iota</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+</ul>
+<h3 id="grp-cyr-m" class="idx-group">М</h3>
+<ul class="idx-list">
+<li><a href="./language.html#control">мапа</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+<li><a href="./language.html#values">массив</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./language.html#control">массив, указатель на массив, срез</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+</ul>
+<h3 id="grp-cyr-n" class="idx-group">Н</h3>
+<ul class="idx-list">
+<li><a href="./language.html#slicing">Нарезка</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+</ul>
+<h3 id="grp-cyr-p" class="idx-group">П</h3>
+<ul class="idx-list">
+<li><a href="./language.html#receivers">Получатели и method set</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+<li><a href="./language.html#slices">Присваивание</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+</ul>
+<h3 id="grp-cyr-s" class="idx-group">С</h3>
+<ul class="idx-list">
+<li><a href="./language.html#slices">Сравнение <code>==</code></a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+<li><a href="./language.html#values">структура</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+</ul>
+<h3 id="grp-cyr-u" class="idx-group">У</h3>
+<ul class="idx-list">
+<li><a href="./language.html#values">указатель, функция, интерфейс, срез, канал, мапа</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+</ul>
+<h3 id="grp-cyr-f" class="idx-group">Ф</h3>
+<ul class="idx-list">
+<li><a href="./language.html#import-forms">Формы импорта</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./language.html#control">функция-итератор [Go 1.23]</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+</ul>
+<h3 id="grp-cyr-ch" class="idx-group">Ч</h3>
+<ul class="idx-list">
+<li><a href="./language.html#values">числовые типы</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./language.html#range-values">Что даёт range</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+</ul>
+<h3 id="grp-cyr-e" class="idx-group">Э</h3>
+<ul class="idx-list">
+<li><a href="./language.html#control">целое <code>n</code> [Go 1.22]</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
+</ul>
+</section>
+
+<footer class="reference-footer">
+  <p><strong>Не нашёл?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
+  <p class="reference-footer__links">
+    <a href="./index.html">Главная</a> ·
+    <a href="./language.html">Язык</a> ·
+    <a href="./concurrency.html">Параллелизм</a> ·
+    <a href="./runtime.html">Рантайм</a> ·
+    <a href="./stdlib.html">Стандартная библиотека</a> ·
+    <a href="./http-service.html">HTTP-сервис</a> ·
+    <a href="./sql.html">SQL и Postgres</a> ·
+    <a href="./tooling.html">Инструменты</a> ·
+    <a href="./architecture.html">Архитектура</a> ·
+    <a href="./examples.html">Примеры кода</a>
+  </p>
+</footer>
+
+</main>
+<script src="assets/page.js"></script>
+<script src="assets/quickopen.js"></script>
+<script src="assets/backtotop.js"></script>
+</body>
+</html>

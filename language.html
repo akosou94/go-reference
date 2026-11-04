@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Язык Go — справочник</title>
+<link rel="stylesheet" href="assets/reference.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<script src="assets/reference.js"></script>
+</head>
+<body>
+<main class="reference" id="top">
+
+<div class="refside">
+<nav class="refnav refnav--rows" aria-label="Справочники">
+  <div class="refnav__row">
+    <span class="refnav__label">Справочники</span>
+    <a href="./index.html">Главная</a>
+    <a href="./ukazatel.html">Указатель</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Язык и рантайм</span>
+    <span class="refnav__here" aria-current="page">Язык</span>
+    <a href="./concurrency.html">Параллелизм</a>
+    <a href="./runtime.html">Рантайм</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Практика</span>
+    <a href="./stdlib.html">Стандартная библиотека</a>
+    <a href="./http-service.html">HTTP-сервис</a>
+    <a href="./sql.html">SQL и Postgres</a>
+    <a href="./tooling.html">Инструменты</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Основы</span>
+    <a href="./architecture.html">Архитектура</a>
+    <a href="./examples.html">Примеры кода</a>
+  </div>
+</nav>
+
+<aside class="refkeys" aria-label="Горячие клавиши">
+  <span class="refkeys__title">Горячие клавиши</span>
+  <ul>
+    <li><kbd>/</kbd> — поиск по странице; <kbd>Enter</kbd> — следующее совпадение</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — поиск по всем справочникам (<kbd>@</kbd> — разделы)</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — в палитре вниз, <kbd>+Shift</kbd> — вверх</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> — палитра команд: что можно сделать</li>
+    <li><kbd>[</kbd> <kbd>]</kbd> — предыдущий / следующий раздел</li>
+    <li><kbd>j</kbd> / <kbd>k</kbd> — скролл вниз / вверх</li>
+    <li><kbd>g</kbd> <kbd>g</kbd> — в начало страницы</li>
+    <li><kbd>G</kbd> — в конец страницы</li>
+    <li><kbd>t</kbd> — скрыть оглавление</li>
+    <li><kbd>n</kbd> — показать/скрыть навигацию</li>
+    <li><kbd>z</kbd> — Zen-режим: только текст</li>
+    <li><kbd>y</kbd> — ссылка на раздел</li>
+    <li><kbd>Esc</kbd> — очистить поиск и снять фокус; в Zen — выйти</li>
+  </ul>
+</aside>
+</div>
+
+<header class="reference-header">
+  <p class="reference-meta">Справочник</p>
+  <h1>Язык Go — справочник</h1>
+  <p class="lead">Пакеты и видимость, переменные и константы, zero values, базовые типы, строки и руны, массивы и срезы, мапы, структуры и методы, интерфейсы, дженерики, ошибки, <code>defer</code>, замыкания и циклы.</p>
+  <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
+</header>
+
+<div class="callout callout--info">
+  <p>Собрано из <a href="https://go.dev/ref/spec">спецификации языка</a>, <a href="https://go.dev/doc/effective_go">Effective Go</a> и release notes Go 1.20–1.27. Версия языка — <strong>Go 1.27</strong>. Поведение, появившееся в конкретной версии, помечено: <code>[Go 1.22]</code>, <code>[Go 1.26]</code> и так далее.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#packages">1. Пакеты, файлы, видимость</a></li>
+    <li><a href="#values">2. Переменные, константы, zero value</a></li>
+    <li><a href="#types">3. Базовые типы и преобразования</a></li>
+    <li><a href="#strings">4. Строки, байты, руны</a></li>
+    <li><a href="#slices">5. Массивы и срезы</a></li>
+    <li><a href="#maps">6. Мапы</a></li>
+    <li><a href="#structs">7. Структуры, методы, embedding</a></li>
+    <li><a href="#interfaces">8. Интерфейсы</a></li>
+    <li><a href="#generics">9. Дженерики</a></li>
+    <li><a href="#errors">10. Ошибки, panic, recover</a></li>
+    <li><a href="#defer">11. defer</a></li>
+    <li><a href="#control">12. Замыкания, циклы, switch</a></li>
+    <li><a href="#sources">13. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="packages">
+  <h2>1. Пакеты, файлы, видимость</h2>
+
+  <p>Каждый файл начинается с объявления пакета. Каталог — единица сборки: все файлы одного каталога принадлежат одному пакету. Импортный путь указывает на пакет, а имя пакета используется в селекторах: <code>fmt.Println</code>.</p>
+
+  <p>Идентификатор экспортируется, если выполнены оба условия: первый символ — заглавная буква Unicode (категория <code>Lu</code>), и идентификатор объявлен в блочном пространстве имён пакета, либо это имя поля или метода. Локальные переменные не экспортируются никогда.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Идентификатор</th><th>Виден из другого пакета</th></tr></thead>
+      <tbody>
+        <tr><td><code>User</code>, <code>NewUser</code>, <code>(*User).Save</code></td><td>да</td></tr>
+        <tr><td><code>user</code>, <code>newUser</code>, <code>save</code></td><td>нет</td></tr>
+        <tr><td><code>_</code></td><td>нигде: значение отбрасывается</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="import-forms">Формы импорта</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Запись</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>import "fmt"</code></td><td>пакет доступен как <code>fmt</code></td></tr>
+        <tr><td><code>import f "fmt"</code></td><td>псевдоним <code>f</code></td></tr>
+        <tr><td><code>import . "fmt"</code></td><td>имена пакета попадают в текущую область видимости</td></tr>
+        <tr><td><code>import _ "net/http/pprof"</code></td><td>импорт только ради побочного эффекта: выполнить <code>init</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="init">Инициализация пакета</h3>
+  <p>Сначала инициализируются переменные уровня пакета — в порядке зависимостей, затем выполняются функции <code>init</code>. Спецификация рекомендует сборщикам передавать файлы пакета в лексикографическом порядке имён, чтобы порядок был воспроизводим. В одном файле <code>init</code> выполняются в порядке объявления; функций <code>init</code> может быть несколько. Вызвать <code>init</code> явно нельзя.</p>
+
+  <p class="is-muted">Правило каталога <code>internal</code> задаёт go-команда, а не спецификация языка: пакет внутри <code>internal</code> можно импортировать только из поддерева, корень которого — родитель этого каталога.</p>
+
+  <pre><code>package store
+
+import (
+    "errors"
+    "fmt"
+)
+
+// User экспортирован: имя начинается с заглавной буквы.
+type User struct {
+    ID   int
+    name string // не экспортировано: видно только внутри пакета
+}
+
+func NewUser(id int, name string) (*User, error) {
+    if name == "" {
+        return nil, errors.New("store: пустое имя")
+    }
+    return &amp;User{ID: id, name: name}, nil
+}
+
+// Rename экспортирован вместе с получателем *User.
+func (u *User) Rename(name string) error {
+    if name == "" {
+        return fmt.Errorf("store: переименование %d: пустое имя", u.ID)
+    }
+    u.name = name
+    return nil
+}</code></pre>
+</section>
+
+<section id="values">
+  <h2>2. Переменные, константы, zero value</h2>
+
+  <p><code>var</code> объявляет переменную, <code>:=</code> — короткое объявление внутри функции. В коротком объявлении хотя бы одна переменная слева должна быть новой; остальные могут быть переобъявлены, если они объявлены в том же блоке и имеют тот же тип.</p>
+
+  <p>Если явного начального значения нет, переменная или элемент получает zero value своего типа. Инициализация рекурсивна: у массива структур обнуляется каждое поле каждой структуры.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Тип</th><th>Zero value</th></tr></thead>
+      <tbody>
+        <tr><td><code>bool</code></td><td><code>false</code></td></tr>
+        <tr><td>числовые типы</td><td><code>0</code></td></tr>
+        <tr><td><code>string</code></td><td><code>""</code></td></tr>
+        <tr><td>указатель, функция, интерфейс, срез, канал, мапа</td><td><code>nil</code></td></tr>
+        <tr><td>массив</td><td>все элементы — zero value своего типа</td></tr>
+        <tr><td>структура</td><td>все поля — zero value своих типов</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="constants">Константы и iota</h3>
+  <p>Константы бывают типизированные и нетипизированные. Нетипизированная константа хранит точное значение произвольной точности; ошибка возникает только при попытке представить это значение в конкретном типе. В списке констант пропущенное выражение повторяет предыдущее, а <code>iota</code> увеличивается на каждом <code>ConstSpec</code>.</p>
+
+  <pre><code>type Weekday int
+
+const (
+    Sunday Weekday = iota // 0
+    Monday                // 1: выражение повторено, iota = 1
+    Tuesday               // 2
+)
+
+const Big = 1 &lt;&lt; 100     // нетипизированная константа: точное значение
+var x int64 = Big         // ошибка компиляции: не помещается в int64
+
+var y = Big               // тоже ошибка: у нетипизированной слишком большое значение</code></pre>
+
+  <h3 id="new-make">new и make</h3>
+  <p><code>new(T)</code> выделяет переменную типа <code>T</code> с zero value и возвращает <code>*T</code>. С Go 1.26 аргументом может быть выражение: <code>new(x)</code> выделяет переменную типа <code>x</code> со значением <code>x</code>. <code>make</code> работает только со срезами, мапами и каналами и возвращает значение, а не указатель.</p>
+
+  <pre><code>p := new(int)        // *int, *p == 0
+q := new(42)         // *int, *q == 42  [Go 1.26]
+
+s := make([]int, 0, 8) // len 0, cap 8
+m := make(map[string]int)
+ch := make(chan int, 4)</code></pre>
+</section>
+
+<section id="types">
+  <h2>3. Базовые типы и преобразования</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Тип</th><th>Что хранит</th><th>Примечание</th></tr></thead>
+      <tbody>
+        <tr><td><code>bool</code></td><td><code>true</code> или <code>false</code></td><td></td></tr>
+        <tr><td><code>string</code></td><td>последовательность байтов</td><td>неизменяемая</td></tr>
+        <tr><td><code>int</code>, <code>uint</code></td><td>целые</td><td>32 или 64 бита, зависит от платформы</td></tr>
+        <tr><td><code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code></td><td>знаковые целые</td><td>8, 16, 32, 64 бита</td></tr>
+        <tr><td><code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>uint64</code></td><td>беззнаковые целые</td><td>8, 16, 32, 64 бита</td></tr>
+        <tr><td><code>uintptr</code></td><td>биты указателя</td><td>для низкоуровневых операций</td></tr>
+        <tr><td><code>float32</code>, <code>float64</code></td><td>числа с плавающей точкой</td><td>IEEE 754</td></tr>
+        <tr><td><code>complex64</code>, <code>complex128</code></td><td>комплексные числа</td><td></td></tr>
+        <tr><td><code>byte</code></td><td>псевдоним <code>uint8</code></td><td>не отдельный тип</td></tr>
+        <tr><td><code>rune</code></td><td>псевдоним <code>int32</code></td><td>кодовая точка Unicode</td></tr>
+        <tr><td><code>any</code></td><td>псевдоним <code>interface{}</code></td><td>с Go 1.18</td></tr>
+        <tr><td><code>error</code></td><td>интерфейс с методом <code>Error() string</code></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Неявных преобразований между числовыми типами нет: <code>int32</code> и <code>int64</code> — разные типы, и присваивание требует явного <code>T(x)</code>. Преобразование константы проверяется при компиляции; преобразование переменной выполняется во время работы, лишние биты отбрасываются. Для дробных в целое дробная часть отбрасывается; если значение не представимо в целевом типе, результат зависит от реализации.</p>
+
+  <pre><code>var f float64 = 3.9
+n := int(f)          // 3: усечение к нулю
+
+var i = 300
+b := uint8(i)        // 44: 300 по модулю 256
+
+const c = 300
+// var d uint8 = uint8(c) // ошибка компиляции: константа не помещается
+
+s := string(rune(65)) // "A"; string(65) компилируется, но vet предупреждает</code></pre>
+
+  <h3 id="builtins">min, max, clear</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Вызов</th><th>Результат</th></tr></thead>
+      <tbody>
+        <tr><td><code>min(x, y, …)</code></td><td>наименьший из аргументов упорядоченного типа; если есть NaN, результат NaN</td></tr>
+        <tr><td><code>max(x, y, …)</code></td><td>наибольший из аргументов упорядоченного типа</td></tr>
+        <tr><td><code>clear(m)</code></td><td>удаляет все записи мапы; для nil-мапы — no-op</td></tr>
+        <tr><td><code>clear(s)</code></td><td>обнуляет элементы среза до его длины; длина не меняется</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="is-muted">Аргументы <code>min</code> и <code>max</code> — фиксированное число значений, не срез: <code>min(s...)</code> не компилируется. Все три встроенные функции появились в Go 1.21.</p>
+</section>
+
+<section id="strings">
+  <h2>4. Строки, байты, руны</h2>
+
+  <p>Строка — неизменяемая последовательность байтов. <code>len(s)</code> возвращает число байтов, <code>s[i]</code> — байт с индексом <code>i</code>; взять адрес байта строки нельзя. Строки сравниваются лексикографически, побайтово.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Операция</th><th>Единица</th></tr></thead>
+      <tbody>
+        <tr><td><code>len(s)</code></td><td>байты</td></tr>
+        <tr><td><code>s[i]</code></td><td><code>byte</code></td></tr>
+        <tr><td><code>for i, r := range s</code></td><td>индекс первого байта кодовой точки и <code>rune</code></td></tr>
+        <tr><td><code>utf8.RuneCountInString(s)</code></td><td>руны</td></tr>
+        <tr><td><code>[]byte(s)</code>, <code>string(b)</code></td><td>копия байтов</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Литералы: <code>"..."</code> — интерпретируемая строка с escape-последовательностями, <code>`...`</code> — сырая, без escape и с переводами строк, <code>'x'</code> — литерал руны. При обходе строки через <code>range</code> некорректная последовательность UTF-8 даёт <code>U+FFFD</code>, а следующая итерация сдвигается на один байт.</p>
+
+  <pre><code>s := "Привет"
+fmt.Println(len(s))                     // 12: байты
+fmt.Println(utf8.RuneCountInString(s))  // 6: руны
+
+for i, r := range s {
+    fmt.Println(i, r, string(r))        // i — индекс байта, r — rune
+}
+
+b := []byte(s)   // копия
+t := string(b)   // ещё одна копия</code></pre>
+
+  <p>Конкатенация в цикле создаёт новую строку на каждой итерации. Для сборки из частей есть <code>strings.Builder</code> и <code>strings.Join</code>; <code>Builder</code> не копирует данные при каждой записи.</p>
+
+  <pre><code>var b strings.Builder
+for i := 0; i &lt; 3; i++ {
+    fmt.Fprintf(&amp;b, "%d,", i)
+}
+s := b.String() // "0,1,2,"</code></pre>
+</section>
+
+<section id="slices">
+  <h2>5. Массивы и срезы</h2>
+
+  <p>Массив — значение: длина входит в тип, присваивание копирует все элементы. Срез — дескриптор непрерывного сегмента массива: указатель на элементы, длина и ёмкость. Присваивание среза копирует дескриптор, поэтому два среза могут делить один массив.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Свойство</th><th>Массив <code>[N]T</code></th><th>Срез <code>[]T</code></th></tr></thead>
+      <tbody>
+        <tr><td>Длина в типе</td><td>да</td><td>нет</td></tr>
+        <tr><td>Присваивание</td><td>копирует элементы</td><td>копирует дескриптор, массив общий</td></tr>
+        <tr><td>Сравнение <code>==</code></td><td>если элемент сравним</td><td>только с <code>nil</code></td></tr>
+        <tr><td><code>len</code> и <code>cap</code></td><td>равны <code>N</code></td><td>могут различаться</td></tr>
+        <tr><td>Zero value</td><td>массив из zero value</td><td><code>nil</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Пустой срез и nil-срез ведут себя по-разному только там, где важно отличие «нет данных» от «пустой список»: <code>append</code> работает с обоими, <code>len</code> у обоих 0, а <code>encoding/json</code> кодирует nil как <code>null</code>, пустой — как <code>[]</code>.</p>
+
+  <h3 id="slicing">Нарезка</h3>
+  <p>Выражение <code>a[low:high]</code> даёт срез от <code>low</code> до <code>high-1</code>; <code>low</code> по умолчанию 0, <code>high</code> — <code>len(a)</code>. Трёхиндексная форма <code>a[low:high:max]</code> дополнительно ограничивает ёмкость: <code>cap</code> результата равен <code>max-low</code>.</p>
+
+  <pre><code>a := []int{1, 2, 3, 4}
+b := a[1:3]        // len 2, cap 3
+b = append(b, 99)  // ёмкости хватает: пишет в общий массив
+fmt.Println(a)     // [1 2 3 99]
+
+c := a[1:3:3]      // cap 2: append выделит новый массив</code></pre>
+
+  <p><code>append</code> возвращает срез: если ёмкости хватает, он пишет в существующий массив, иначе выделяет новый и копирует элементы. Поэтому результат <code>append</code> может разделять память с исходным срезом. <code>copy</code> копирует элементы и возвращает их число.</p>
+
+  <pre><code>src := []int{1, 2, 3}
+dst := make([]int, len(src))
+n := copy(dst, src) // n == 3
+
+// удаление элемента с сохранением порядка
+src = append(src[:1], src[2:]...) // [1 3]</code></pre>
+
+  <p>Пакет <code>slices</code> (Go 1.21) даёт <code>Clone</code>, <code>Equal</code>, <code>Contains</code>, <code>Index</code>, <code>Sort</code>, <code>SortFunc</code>, <code>Compact</code>, <code>Delete</code>, <code>Insert</code>. С Go 1.23 там же итераторы: <code>All</code>, <code>Values</code>, <code>Backward</code>, <code>Collect</code>, <code>Chunk</code>.</p>
+</section>
+
+<section id="maps">
+  <h2>6. Мапы</h2>
+
+  <p>Мапа — неупорядоченный набор пар «ключ → значение». Тип ключа должен быть сравним: функции, мапы и срезы ключами быть не могут. Если ключ — интерфейс, сравнение выполняется по динамическому типу и значению; несравнимый динамический тип даёт панику во время работы.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Операция</th><th>nil-мапа</th></tr></thead>
+      <tbody>
+        <tr><td><code>m[k]</code></td><td>zero value типа значения</td></tr>
+        <tr><td><code>len(m)</code></td><td>0</td></tr>
+        <tr><td><code>delete(m, k)</code></td><td>no-op</td></tr>
+        <tr><td><code>clear(m)</code></td><td>no-op</td></tr>
+        <tr><td><code>for k := range m</code></td><td>0 итераций</td></tr>
+        <tr><td><code>m[k] = v</code></td><td>паника: assignment to entry in nil map</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Порядок обхода мапы не определён и не гарантирован от одной итерации к другой. Если во время обхода удалить ещё не пройденную запись, она не будет выдана; если добавить запись, она может быть выдана или пропущена.</p>
+
+  <pre><code>m := map[string]int{"a": 1}
+
+v, ok := m["b"] // v == 0, ok == false
+if !ok {
+    m["b"] = 0
+}
+
+delete(m, "a")
+clear(m)        // мапа пуста, но не nil
+
+// элемент мапы не адресуем:
+// m["a"].Field = 1 // не компилируется</code></pre>
+
+  <p>Мапа не безопасна для одновременной записи из нескольких горутин; для этого нужен мьютекс или <code>sync.Map</code>. Пакет <code>maps</code> (Go 1.21) даёт <code>Clone</code>, <code>Copy</code>, <code>Equal</code>, а с Go 1.23 — итераторы <code>All</code>, <code>Keys</code>, <code>Values</code>, <code>Insert</code>, <code>Collect</code>.</p>
+</section>
+
+<section id="structs">
+  <h2>7. Структуры, методы, embedding</h2>
+
+  <p>Литерал структуры бывает позиционный и с ключами. Позиционный требует все поля в порядке объявления; с ключами можно опустить часть полей — они получат zero value. Неэкспортированные поля чужого пакета в литерале задать нельзя.</p>
+
+  <p>Теги — строковые метаданные поля; их читает <code>reflect</code>, например <code>encoding/json</code>. С Go 1.27 ключом в литерале может быть любой допустимый селектор поля, а не только имя верхнего уровня.</p>
+
+  <pre><code>type Point struct {
+    X, Y int
+}
+
+p1 := Point{1, 2}
+p2 := Point{X: 1} // Y == 0
+
+type User struct {
+    ID   int    `json:"id"`
+    Name string `json:"name,omitempty"`
+}</code></pre>
+
+  <h3 id="receivers">Получатели и method set</h3>
+  <p>Метод объявляется с получателем-значением или получателем-указателем. Method set определяет, какие методы доступны через значение типа и через указатель.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Объявление</th><th>В method set <code>T</code></th><th>В method set <code>*T</code></th></tr></thead>
+      <tbody>
+        <tr><td><code>func (t T) M()</code></td><td>да</td><td>да</td></tr>
+        <tr><td><code>func (t *T) M()</code></td><td>нет</td><td>да</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Вызов <code>t.M()</code> для метода с получателем-указателем компилируется, если <code>t</code> адресуем: компилятор подставляет <code>(&amp;t).M()</code>. Элемент мапы не адресуем, поэтому <code>m[k].M()</code> для такого метода не компилируется.</p>
+
+  <pre><code>type Counter struct{ n int }
+
+func (c Counter) Value() int  { return c.n }
+func (c *Counter) Inc()       { c.n++ }
+
+var c Counter
+c.Inc()        // (&amp;c).Inc(): c.n == 1
+fmt.Println(c.Value())</code></pre>
+
+  <h3 id="embedding">Встраивание</h3>
+  <p>Встроенное поле объявляется без имени — только тип; именем поля становится имя типа. Поля и методы встроенного типа продвигаются: доступны через внешнюю структуру, если не перекрыты полем или методом на меньшей глубине. Два встроенных типа на одной глубине с одинаковым именем дают неоднозначный селектор.</p>
+
+  <pre><code>type Logger struct{ prefix string }
+
+func (l Logger) Log(msg string) { fmt.Println(l.prefix, msg) }
+
+type Service struct {
+    Logger        // поле называется Logger
+    Name   string
+}
+
+s := Service{Logger: Logger{prefix: "svc"}, Name: "billing"}
+s.Log("start") // продвинутый метод</code></pre>
+
+  <p class="is-muted">Method set структуры <code>S</code> с встроенным <code>T</code> включает продвинутые методы <code>T</code>; method set <code>*S</code> — продвинутые методы и <code>T</code>, и <code>*T</code>.</p>
+</section>
+
+<section id="interfaces">
+  <h2>8. Интерфейсы</h2>
+
+  <p>Интерфейс задаёт набор типов. Тип реализует интерфейс неявно: достаточно, чтобы его method set содержал все методы интерфейса. Объявлять «implements» не нужно. Пустой интерфейс <code>interface{}</code>, он же <code>any</code>, реализуют все типы.</p>
+
+  <p>Интерфейс с элементами типа — объединениями (<code>int | string</code>) или <code>~T</code> — можно использовать только как ограничение type parameter, но не как тип переменной.</p>
+
+  <h3 id="typed-nil">nil-интерфейс и типизированный nil</h3>
+  <p>Значение интерфейса равно <code>nil</code>, только если равны и динамический тип, и динамическое значение. Указатель, положенный в интерфейс, сохраняет динамический тип, поэтому такой интерфейс не равен <code>nil</code>.</p>
+
+  <pre><code>type MyError struct{}
+
+func (e *MyError) Error() string { return "my error" }
+
+func do() error {
+    var e *MyError = nil
+    return e // err != nil: динамический тип *MyError, значение nil
+}</code></pre>
+
+  <h3 id="assertions">Type assertion и type switch</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Форма</th><th>Поведение</th></tr></thead>
+      <tbody>
+        <tr><td><code>v := x.(T)</code></td><td>паника, если динамический тип не <code>T</code></td></tr>
+        <tr><td><code>v, ok := x.(T)</code></td><td>при неудаче <code>v</code> — zero value <code>T</code>, <code>ok == false</code></td></tr>
+        <tr><td><code>switch v := x.(type)</code></td><td>ветка по динамическому типу; <code>fallthrough</code> запрещён</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>switch v := x.(type) {
+case nil:
+    fmt.Println("nil")
+case int:
+    fmt.Println("int", v)
+case error:
+    fmt.Println("error", v)
+default:
+    fmt.Printf("%T\n", v)
+}</code></pre>
+
+  <p>Интерфейсы встраиваются друг в друга: <code>io.ReadWriter</code> — это <code>io.Reader</code> плюс <code>io.Writer</code>. Проверка соответствия на этапе компиляции записывается пустым объявлением:</p>
+
+  <pre><code>var _ io.Reader = (*bytes.Buffer)(nil)</code></pre>
+</section>
+
+<section id="generics">
+  <h2>9. Дженерики</h2>
+
+  <p>Функция, тип или метод может объявить type parameters в квадратных скобках. Каждый параметр имеет ограничение — constraint, то есть интерфейс, задающий допустимые типы и доступные операции.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Constraint</th><th>Что допускает</th></tr></thead>
+      <tbody>
+        <tr><td><code>any</code></td><td>любой тип</td></tr>
+        <tr><td><code>comparable</code></td><td>типы, для которых определены <code>==</code> и <code>!=</code></td></tr>
+        <tr><td><code>~int</code></td><td>типы с underlying type <code>int</code>, включая <code>type ID int</code></td></tr>
+        <tr><td><code>int | string</code></td><td>объединение типов</td></tr>
+        <tr><td><code>interface{ M() }</code></td><td>типы с методом <code>M</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>type Number interface {
+    ~int | ~int64 | ~float64
+}
+
+func Sum[T Number](xs []T) T {
+    var total T
+    for _, x := range xs {
+        total += x // + доступен: он есть у всех типов из constraint
+    }
+    return total
+}
+
+type ID int64
+
+total := Sum([]ID{1, 2, 3}) // ID подходит через ~int64</code></pre>
+
+  <p>Тип-аргумент обычно выводится из аргументов функции. Если вывести не удаётся, его указывают явно: <code>Sum[ID](xs)</code>. Дженерик-типы инстанцируются так же: <code>Pair[string, int]</code>.</p>
+
+  <p>Версии: generic type aliases полностью поддержаны с Go 1.24 (<code>type Set[T comparable] = map[T]struct{}</code>); generic methods — с Go 1.27. Методы интерфейсов не могут объявлять type parameters, и generic-метод не может реализовать метод интерфейса. Отдельной специализации под каждый тип, как в C++, нет.</p>
+
+  <pre><code>type Pair[K comparable, V any] struct {
+    Key   K
+    Value V
+}
+
+// generic method [Go 1.27]
+func (p Pair[K, V]) Map[T any](f func(V) T) Pair[K, T] {
+    return Pair[K, T]{Key: p.Key, Value: f(p.Value)}
+}</code></pre>
+</section>
+
+<section id="errors">
+  <h2>10. Ошибки, panic, recover</h2>
+
+  <p><code>error</code> — интерфейс с единственным методом <code>Error() string</code>. Ошибка может быть sentinel-значением, собственным типом или обёрткой над другой ошибкой.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Средство</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>errors.New</code></td><td>создаёт ошибку с фиксированным текстом</td></tr>
+        <tr><td><code>fmt.Errorf("%w", err)</code></td><td>оборачивает одну ошибку; <code>Unwrap</code> возвращает её</td></tr>
+        <tr><td><code>fmt.Errorf("%w … %w", e1, e2)</code></td><td>оборачивает несколько ошибок (Go 1.20)</td></tr>
+        <tr><td><code>errors.Is(err, target)</code></td><td>сравнивает с целевой ошибкой, разворачивая цепочку</td></tr>
+        <tr><td><code>errors.As(err, &amp;target)</code></td><td>ищет в цепочке ошибку нужного конкретного типа</td></tr>
+        <tr><td><code>errors.Join(errs...)</code></td><td>объединяет ошибки; <code>Unwrap() []error</code>; nil, если все nil</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>var ErrNotFound = errors.New("not found")
+
+func Load(id int) error {
+    if id &lt;= 0 {
+        return fmt.Errorf("load %d: %w", id, ErrNotFound)
+    }
+    return nil
+}
+
+err := Load(0)
+fmt.Println(errors.Is(err, ErrNotFound)) // true
+
+type ValidationError struct{ Field string }
+
+func (e *ValidationError) Error() string { return "invalid " + e.Field }
+
+var ve *ValidationError
+if errors.As(err, &amp;ve) {
+    fmt.Println(ve.Field)
+}</code></pre>
+
+  <p><code>panic</code> прекращает обычное выполнение функции и запускает её отложенные вызовы. <code>recover</code> возвращает значение паники, но работает только внутри отложенной функции; вне паники он возвращает <code>nil</code>. С Go 1.21 <code>panic(nil)</code> даёт панику типа <code>*runtime.PanicNilError</code>, поэтому <code>recover</code> не может вернуть <code>nil</code> незаметно.</p>
+
+  <p>Соглашение: <code>error</code> — для ожидаемых ошибок, которые вызывающий может обработать; <code>panic</code> — для программных дефектов и нарушенных инвариантов. <code>os.Exit</code> завершает программу сразу и отложенные вызовы не выполняет.</p>
+</section>
+
+<section id="defer">
+  <h2>11. defer</h2>
+
+  <p><code>defer</code> откладывает вызов функции до возврата из окружающей функции — по <code>return</code>, по концу тела или при панике. Аргументы отложенного вызова вычисляются в момент <code>defer</code>, а сам вызов выполняется позже. Отложенные вызовы идут в обратном порядке: последний объявленный выполняется первым.</p>
+
+  <pre><code>func f() (result int) {
+    defer func() { result *= 7 }()
+    return 6 // result = 6, затем defer: 42
+}
+
+for i := 0; i &lt;= 3; i++ {
+    defer fmt.Print(i) // напечатает 3 2 1 0
+}</code></pre>
+
+  <p>Отложенная функция может изменить именованный результат: <code>return</code> сначала присваивает результат, затем выполняются <code>defer</code>, затем функция возвращается. Возвращаемые значения самой отложенной функции отбрасываются.</p>
+
+  <p>В цикле <code>defer</code> накапливается до выхода из функции: файлы закроются только в конце, а не на каждой итерации. Если ресурс нужно освобождать сразу, вызов закрытия делают явно или оборачивают итерацию в отдельную функцию.</p>
+
+  <pre><code>for _, name := range names {
+    f, err := os.Open(name)
+    if err != nil {
+        return err
+    }
+    defer f.Close() // все файлы закроются при выходе из функции
+}</code></pre>
+
+  <p class="is-muted"><code>runtime.Goexit</code> выполняет отложенные вызовы текущей горутины, <code>os.Exit</code> — нет.</p>
+</section>
+
+<section id="control">
+  <h2>12. Замыкания, циклы, switch</h2>
+
+  <p>Функциональное значение может захватывать переменные из окружающей области; замыкание видит переменную, а не копию её значения. С Go 1.22 переменные, объявленные в <code>for</code> или в <code>range</code>, создаются заново на каждой итерации — поэтому замыкания больше не делят одну переменную.</p>
+
+  <pre><code>var prints []func()
+for i := 0; i &lt; 5; i++ {
+    prints = append(prints, func() { fmt.Println(i) })
+    i++
+}
+for _, p := range prints {
+    p() // 1 3 5; до Go 1.22 было бы 6 6 6
+}</code></pre>
+
+  <p class="is-muted">Семантика определяется версией языка в <code>go.mod</code>: для модулей с <code>go 1.21</code> и ниже сохраняется общая переменная цикла.</p>
+
+  <h3 id="range-values">Что даёт range</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Выражение</th><th>Первое значение</th><th>Второе значение</th></tr></thead>
+      <tbody>
+        <tr><td>массив, указатель на массив, срез</td><td>индекс <code>int</code></td><td>элемент</td></tr>
+        <tr><td><code>string</code></td><td>индекс первого байта</td><td><code>rune</code></td></tr>
+        <tr><td>мапа</td><td>ключ</td><td>значение</td></tr>
+        <tr><td>канал</td><td>принятое значение</td><td>—</td></tr>
+        <tr><td>целое <code>n</code> [Go 1.22]</td><td><code>0 … n-1</code></td><td>—</td></tr>
+        <tr><td>функция-итератор [Go 1.23]</td><td>значения из <code>yield</code></td><td>значения из <code>yield</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>for i := range 3 {
+    fmt.Println(i) // 0 1 2
+}
+
+outer:
+for _, row := range grid {
+    for _, v := range row {
+        if v &lt; 0 {
+            break outer // break с меткой выходит из обоих циклов
+        }
+    }
+}</code></pre>
+
+  <p><code>switch</code> не проваливается в следующую ветку по умолчанию: <code>fallthrough</code> нужно писать явно, и он допустим только в выражении-переключателе, но не в type switch. В <code>switch</code> можно объявить переменную перед условием: <code>switch x := f(); x { … }</code>.</p>
+
+  <pre><code>switch n := len(s); {
+case n == 0:
+    fmt.Println("пусто")
+case n &lt; 10:
+    fmt.Println("короткая")
+default:
+    fmt.Println("длинная")
+}</code></pre>
+</section>
+
+<section id="sources">
+  <h2>13. Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/ref/spec">The Go Programming Language Specification</a> — объявления, типы, операторы, инструкции, пакеты</li>
+    <li><a href="https://go.dev/doc/effective_go">Effective Go</a> — идиомы: получатели, встраивание, интерфейсы, ошибки, panic и recover</li>
+    <li><a href="https://go.dev/doc/faq">Go FAQ</a> — срезы, мапы, интерфейсы, сборка мусора</li>
+    <li><a href="https://go.dev/blog/slices-intro">Slices: usage and internals</a> — устройство дескриптора среза и append</li>
+    <li><a href="https://go.dev/blog/loopvar-preview">Fixing for loops in Go 1.22</a> — переменные цикла</li>
+    <li><a href="https://go.dev/doc/go1.20">Release notes Go 1.20</a> — несколько <code>%w</code>, <code>errors.Join</code></li>
+    <li><a href="https://go.dev/doc/go1.21">Release notes Go 1.21</a> — <code>min</code>, <code>max</code>, <code>clear</code>, <code>slices</code>, <code>maps</code>, <code>panic(nil)</code></li>
+    <li><a href="https://go.dev/doc/go1.22">Release notes Go 1.22</a> — per-iteration переменные цикла, <code>range</code> по целому</li>
+    <li><a href="https://go.dev/doc/go1.23">Release notes Go 1.23</a> — <code>range</code> по функции, итераторы в <code>slices</code> и <code>maps</code></li>
+    <li><a href="https://go.dev/doc/go1.24">Release notes Go 1.24</a> — generic type aliases</li>
+    <li><a href="https://go.dev/doc/go1.26">Release notes Go 1.26</a> — <code>new(expr)</code>, самоссылающиеся constraints</li>
+    <li><a href="https://go.dev/doc/go1.27">Release notes Go 1.27</a> — generic methods, селектор поля как ключ литерала</li>
+    <li><a href="https://pkg.go.dev/errors">pkg.go.dev/errors</a> — <code>Is</code>, <code>As</code>, <code>Join</code>, <code>Unwrap</code></li>
+    <li><a href="https://pkg.go.dev/slices">pkg.go.dev/slices</a> и <a href="https://pkg.go.dev/maps">pkg.go.dev/maps</a> — обобщённые операции над срезами и мапами</li>
+  </ul>
+</section>
+
+<footer class="reference-footer">
+  <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
+  <p class="reference-footer__links">
+    <a href="./index.html">Главная</a> ·
+    <a href="./concurrency.html">Параллелизм</a> ·
+    <a href="./runtime.html">Рантайм</a> ·
+    <a href="./stdlib.html">Стандартная библиотека</a> ·
+    <a href="./http-service.html">HTTP-сервис</a> ·
+    <a href="./sql.html">SQL и Postgres</a> ·
+    <a href="./tooling.html">Инструменты</a> ·
+    <a href="./architecture.html">Архитектура</a> ·
+    <a href="./examples.html">Примеры кода</a> ·
+    <a href="./ukazatel.html">Указатель</a>
+  </p>
+</footer>
+
+</main>
+<script src="assets/page.js"></script>
+<script src="assets/quickopen.js"></script>
+<script src="assets/backtotop.js"></script>
+</body>
+</html>

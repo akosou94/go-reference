@@ -1,0 +1,1091 @@
+/* ============================================================
+   reference.css — стиль справочников
+   Подключается каждой страницей проекта:
+     <link rel="stylesheet" href="assets/reference.css">
+   ============================================================ */
+
+:root {
+  --ink:        #1c1c1e;
+  --ink-soft:   #4a4a4f;
+  --muted:      #71717a;
+  --rule:       #e4e4e7;
+  --paper:      #fbfaf7;
+  --card:       #ffffff;
+  --accent:     #0b6e4f;
+  --accent-ink: #084d38;
+  --accent-bg:  #e9f4ef;
+  --danger:     #b3261e;
+  --danger-bg:  #fbeceb;
+  --warn:       #8a5a00;
+  --warn-bg:    #fdf4e3;
+  --info:       #1a4fa0;
+  --info-bg:    #eaf0fb;
+  --code-bg:    #f4f2ee;
+  --code-ink:   #24242a;
+  --flash-bg:   #dcefe6;
+  --maxw:       46rem;
+
+  --serif: Georgia, "Times New Roman", "Noto Serif", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+}
+
+.reference {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem;
+}
+
+/* ---------- Шапка ---------- */
+
+.reference-header {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.reference-meta {
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+h1 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 2.1rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.6rem;
+}
+
+.lead {
+  font-size: 1.2rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.9rem;
+}
+
+.reference-sub {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ---------- Секции и заголовки ---------- */
+
+section { margin: 2.75rem 0; }
+
+h2 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+h3 {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 1.75rem 0 0.5rem;
+}
+
+p { margin: 0 0 1rem; }
+
+ul, ol { margin: 0 0 1rem; padding-left: 1.35rem; }
+li { margin: 0.3rem 0; }
+
+strong { font-weight: 700; }
+em { font-style: italic; }
+
+/* ---------- Ссылки ---------- */
+
+a {
+  color: var(--info);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover { color: var(--accent-ink); }
+
+/* ---------- Код ---------- */
+
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  margin: 0 0 1.25rem;
+  line-height: 1.55;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.86rem;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+/* ---------- Врезки ---------- */
+
+.callout {
+  border-left: 4px solid var(--rule);
+  background: var(--card);
+  border-radius: 0 8px 8px 0;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.25rem;
+}
+.callout p:last-child { margin-bottom: 0; }
+.callout--info    { border-color: var(--info);   background: var(--info-bg); }
+.callout--warn    { border-color: var(--warn);   background: var(--warn-bg); }
+.callout--success { border-color: var(--accent); background: var(--accent-bg); }
+.callout--danger  { border-color: var(--danger); background: var(--danger-bg); }
+
+/* ---------- Диаграмма «коробки и ссылки» ---------- */
+
+.diagram {
+  border: 1px solid var(--rule);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 1.25rem 1.15rem;
+  margin: 0 0 1.25rem;
+}
+
+.diagram__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.diagram__row:last-child { margin-bottom: 0; }
+
+.diagram__note,
+.diagram__caption {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.diagram__caption { margin: 0.6rem 0 0; }
+
+.box {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  background: var(--paper);
+}
+.box--var { background: var(--info-bg); border-color: var(--info); }
+.box--obj { background: var(--accent-bg); border-color: var(--accent); }
+.box__label { font-weight: 700; }
+.box__value { color: var(--ink-soft); }
+
+/* ---------- Квиз ---------- */
+
+.quiz {
+  border: 1px solid var(--rule);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 1.15rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+.quiz__q { font-weight: 700; margin: 0 0 0.75rem; }
+.quiz__code { margin: 0 0 0.85rem; }
+.quiz__options { display: grid; gap: 0.5rem; }
+
+.quiz__opt {
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: 7px;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.quiz__opt:hover:not(:disabled) { border-color: var(--info); }
+.quiz__opt:disabled { cursor: default; opacity: 1; }
+.quiz__opt.is-correct {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+.quiz__opt.is-wrong {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  text-decoration: line-through;
+}
+
+.quiz__feedback {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  margin: 0.85rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+}
+.quiz__feedback.is-correct { background: var(--accent-bg); color: var(--accent-ink); }
+.quiz__feedback.is-wrong   { background: var(--warn-bg);   color: var(--warn); }
+
+/* ---------- Задача ---------- */
+
+.task {
+  border: 1px dashed var(--accent);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 1.15rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+.task__title {
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.6rem;
+}
+
+/* ---------- details / summary ---------- */
+
+details {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 0.7rem 1rem;
+  margin: 0 0 1.25rem;
+}
+summary {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  color: var(--info);
+}
+details[open] summary { margin-bottom: 0.75rem; }
+details > :last-child { margin-bottom: 0; }
+
+/* ---------- Таблицы ---------- */
+
+.table-wrap { overflow-x: auto; margin: 0 0 1.25rem; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+}
+th, td {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 2px solid var(--rule);
+}
+td code { font-size: 0.85em; }
+
+/* Первая колонка (ключ) залипает при горизонтальной прокрутке — как
+   закреплённая колонка в редакторе. Фон непрозрачный: иначе текст
+   проезжает под колонкой. */
+.table-wrap th:first-child,
+.table-wrap td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--paper);
+}
+/* Строка под курсором — как подсветка текущей строки в редакторе. */
+.table-wrap tbody tr:hover td { background: var(--accent-bg); }
+
+/* ---------- Подвал ---------- */
+
+.reference-footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--ink);
+  font-size: 0.95rem;
+}
+.reference-footer__links {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.is-muted { color: var(--muted); }
+
+/* ---------- Справочник ---------- */
+
+.reference { --maxw: 58rem; }
+.reference td code { overflow-wrap: break-word; }
+/* Ключ в первой колонке — всегда одной строкой (типы и описания могут переноситься) */
+.reference td:first-child { white-space: nowrap; }
+/* У 5-колоночных таблиц длинный ключ в первой колонке иначе выталкивает таблицу за контейнер */
+.reference .cols-5 th,
+.reference .cols-5 td { padding-left: 0.6rem; padding-right: 0.6rem; }
+.reference .idx-list a,
+.reference .idx-list .idx-src { overflow-wrap: anywhere; }
+.reference .reference-header .lead,
+.reference section > p { max-width: 46rem; }
+.reference h2 { margin-top: 2rem; }
+/* #toc — не section, а <nav>, поэтому отступ задаём отдельно */
+.reference section, .reference > #toc { margin: 2rem 0; }
+
+/* ---------- Печать ---------- */
+
+@media print {
+  body { background: #fff; font-size: 11pt; }
+  .reference { max-width: none; padding: 0; }
+  a { color: var(--ink); text-decoration: none; }
+  pre, .quiz, .callout, .diagram, .task, details { break-inside: avoid; }
+  .quiz__opt { border-color: var(--rule); }
+  .quiz__feedback { display: none; }
+}
+
+@media (max-width: 34rem) {
+  .reference { padding: 1.5rem 1.1rem 4rem; }
+  h1 { font-size: 1.7rem; }
+  .lead { font-size: 1.08rem; }
+}
+
+/* ---------- Липкое оглавление справочника (широкие экраны) ---------- */
+
+.reference section[id], .reference h3[id] { scroll-margin-top: 6.5rem; }
+@media (max-width: 52rem) {
+  .reference section[id], .reference h3[id] { scroll-margin-top: 1rem; }
+}
+/* На широких экранах навигация уезжает в боковую панель — липкой полосы нет. */
+@media (min-width: 88rem) {
+  .reference section[id], .reference h3[id] { scroll-margin-top: 1rem; }
+}
+
+/* Текущий раздел в оглавлении */
+
+#toc a.is-active {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+@media (min-width: 88rem) {
+  .reference > #toc {
+    position: fixed;
+    top: 0.75rem;
+    left: calc(50% + 30rem);
+    width: 14rem;
+    /* Оставляем место под плавающие контролы в правом нижнем углу */
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.85rem 1rem 0.95rem;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  .reference > #toc h2 {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--muted);
+  }
+  .reference > #toc ul {
+    margin: 0;
+    padding-left: 1.05rem;
+    font-family: var(--sans);
+    line-height: 1.35;
+  }
+  .reference > #toc li { margin: 0.24rem 0; }
+  .reference > #toc a { text-decoration: none; }
+  .reference > #toc a:hover { text-decoration: underline; }
+}
+
+@media print {
+  .reference > #toc {
+    position: static;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    border: 0;
+  }
+}
+
+/* ---------- Поиск по странице справочника ---------- */
+
+.refsearch { margin: 0 0 0.7rem; }
+.refsearch input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.refsearch input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.refsearch__results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.refsearch__results li { margin: 0 0 0.45rem; }
+.refsearch__results a { text-decoration: none; }
+.refsearch__results a:hover { text-decoration: underline; }
+.refsearch__item--sub { padding-left: 0.8rem; font-size: 0.94em; }
+.refsearch__excerpt {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  margin-top: 0.1rem;
+}
+.refsearch__empty { color: var(--muted); font-size: 0.85rem; }
+mark { background: #ffe9a8; color: inherit; }
+/* Текущее совпадение поиска по странице — как выделение в редакторе. */
+mark.refhit.is-current { background: var(--accent); color: var(--paper); }
+#toc.searching > ul { display: none; }
+
+@media print { .refsearch { display: none; } }
+@media print { mark.refhit, mark.refhit.is-current { background: transparent; color: inherit; } }
+
+/* ---------- Указатель (сводный) ---------- */
+
+.idx-jump { font-family: var(--sans); font-size: 0.85rem; line-height: 2; }
+.idx-jump a { text-decoration: none; }
+.idx-jump a:hover { text-decoration: underline; }
+.idx-group {
+  margin: 1.8rem 0 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.25rem;
+}
+.idx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 2.5rem;
+}
+.idx-list li { margin: 0 0 0.35rem; break-inside: avoid; font-size: 0.92rem; }
+.idx-list a { text-decoration: none; }
+.idx-list a:hover { text-decoration: underline; }
+.idx-src { color: var(--muted); font-size: 0.8rem; }
+@media (max-width: 48rem) { .idx-list { columns: 1; } }
+@media print { .idx-list { columns: 1; } }
+
+/* ---------- Навигация между справочниками ---------- */
+
+.refnav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.9rem;
+  margin: 0 0 1.6rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.refnav__label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.refnav a { text-decoration: none; }
+.refnav a:hover { text-decoration: underline; }
+.refnav__here { color: var(--muted); font-weight: 600; }
+.refnav.is-hidden { display: none; }
+
+/* Две подписанные группы: «Стек» и «Основы» */
+.refnav--rows { display: block; line-height: 1.35; }
+.refnav__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.9rem;
+}
+.refnav__row + .refnav__row {
+  margin-top: 0.3rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--rule);
+}
+.refnav__row .refnav__label,
+.refnav__row .refnav__group { flex: 0 0 5.25rem; }
+.refnav__group {
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@media (max-width: 34rem) {
+  .refnav__row .refnav__label,
+  .refnav__row .refnav__group { flex: 0 0 100%; }
+}
+@media (max-width: 52rem) { .refnav--rows { position: static; } }
+@media print { .refnav { display: none; } }
+
+/* ---------- Подсветка цели при переходе по якорю ---------- */
+
+@keyframes ref-flash {
+  0%   { background-color: transparent; box-shadow: 0 0 0 0.4rem transparent; }
+  18%  { background-color: var(--flash-bg); box-shadow: 0 0 0 0.4rem var(--flash-bg); }
+  52%  { background-color: var(--flash-bg); box-shadow: 0 0 0 0.4rem var(--flash-bg); }
+  100% { background-color: transparent; box-shadow: 0 0 0 0.4rem transparent; }
+}
+.flash {
+  border-radius: 4px;
+  animation: ref-flash 0.8s ease-in-out both;
+}
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+@media print { .flash { animation: none; } }
+
+/* ---------- Панель горячих клавиш ---------- */
+
+.refkeys { display: none; }
+.refkeys__title {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+.refkeys ul { list-style: none; margin: 0; padding: 0; }
+.refkeys li { margin: 0 0 0.5rem; }
+.refkeys li:last-child { margin-bottom: 0; }
+.refkeys kbd {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  white-space: nowrap;
+}
+
+/* Левая колонка: навигация и горячие клавиши — фиксированная панель */
+
+.refside { display: contents; }
+
+@media (min-width: 88rem) {
+  .refside {
+    position: fixed;
+    top: 0.75rem;
+    left: calc(50% - 44rem);
+    width: 13.5rem;
+    max-height: calc(100vh - 1.5rem);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .refside .refnav {
+    position: static;
+    width: auto;
+    margin: 0;
+  }
+  .refside .refnav__row .refnav__label,
+  .refside .refnav__row .refnav__group { flex: 0 0 100%; }
+  .refside .refkeys {
+    display: block;
+    position: static;
+    width: auto;
+    margin: 0;
+    padding: 0.85rem 1rem 0.95rem;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+}
+
+@media print { .refkeys { display: none; } }
+
+/* ---------- Палитра быстрого перехода (Ctrl/Cmd+E) ---------- */
+
+.quickopen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 1.25rem 1.25rem;
+  background: rgba(28, 28, 30, 0.45);
+}
+.quickopen__box {
+  width: 100%;
+  max-width: 34rem;
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.24);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+.quickopen__input {
+  flex: 0 0 auto;
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 0.98rem;
+  padding: 0.7rem 0.9rem;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  /* Радиус = внутренний радиус .quickopen__box, иначе фокусная обводка
+     срезается скруглением обёртки (overflow: hidden). */
+  border-radius: 9px 9px 0 0;
+  background: #fff;
+  color: var(--ink);
+}
+.quickopen__input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+.quickopen__hint {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.45rem 0.9rem 0.2rem;
+}
+/* Подсказка «удали @ …» — обычным регистром, иначе читается как крик. */
+.quickopen__hint-tip { text-transform: none; letter-spacing: 0; }
+.quickopen__list {
+  flex: 1 1 auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.4rem;
+  overflow-y: auto;
+}
+.quickopen__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.quickopen__preview {
+  display: none;
+  flex: 0 0 auto;
+  max-height: 34vh;
+  overflow-y: auto;
+  border-top: 1px solid var(--rule);
+  padding: 0.7rem 0.9rem 0.75rem;
+  background: var(--paper);
+}
+.quickopen__preview.is-on { display: block; }
+.quickopen__preview-title {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 0.2rem;
+  color: var(--ink);
+}
+.quickopen__preview-src {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.45rem;
+}
+.quickopen__preview-text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0;
+}
+/* На широком экране превью — второй колонкой справа, палитра шире */
+@media (min-width: 60rem) {
+  .quickopen__box { max-width: 56rem; }
+  .quickopen__body { flex-direction: row; }
+  .quickopen__list { min-width: 0; }
+  .quickopen__preview {
+    flex: 0 0 21rem;
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+  }
+}
+.quickopen__group {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+  padding: 0.5rem 0.9rem 0.15rem;
+}
+.quickopen__item {
+  padding: 0.3rem 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: var(--ink);
+  cursor: pointer;
+}
+.quickopen__item--sub { padding-left: 1.9rem; font-size: 0.86rem; color: var(--ink-soft); }
+.quickopen__item.is-active { background: var(--accent-bg); }
+.quickopen__src { color: var(--muted); font-size: 0.85em; }
+.quickopen__item--cmd { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.quickopen__key { color: var(--muted); font-size: 0.85em; white-space: nowrap; }
+.quickopen__empty { padding: 0.6rem 0.9rem; color: var(--muted); font-size: 0.85rem; }
+.quickopen__foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  border-top: 1px solid var(--rule);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.quickopen__foot kbd {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+@media print { .quickopen { display: none; } }
+
+/* ---------- Кнопка «Наверх» ---------- */
+
+.to-top {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.to-top.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.to-top:hover { border-color: var(--accent); }
+.to-top__arrow { font-size: 1rem; line-height: 1; }
+
+@media print { .to-top { display: none; } }
+@media print { .whereami { display: none; } }
+
+/* ---------- Тёмная тема ---------- */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink:        #e7e7ea;
+  --ink-soft:   #b9b9c0;
+  --muted:      #8b8b95;
+  --rule:       #2f2f36;
+  --paper:      #15151a;
+  --card:       #1e1e24;
+  --accent:     #4ed3a3;
+  --accent-ink: #86e8c4;
+  --accent-bg:  #123329;
+  --danger:     #ff6f64;
+  --danger-bg:  #3a1d1b;
+  --warn:       #e3ab45;
+  --warn-bg:    #3a2f16;
+  --info:       #85aaff;
+  --info-bg:    #17233f;
+  --code-bg:    #232329;
+  --code-ink:   #e7e7ea;
+  --flash-bg:   #17402f;
+}
+html[data-theme="dark"] .refsearch input,
+html[data-theme="dark"] .quickopen__input { background: #1b1b21; color: var(--ink); }
+html[data-theme="dark"] mark { background: #6b5a12; color: var(--ink); }
+
+/* ---------- Индикатор прогресса чтения ---------- */
+
+.readbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 55;
+  pointer-events: none;
+}
+.readbar__fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.1s linear;
+}
+
+/* ---------- Плашка «где я» ---------- */
+
+.whereami {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  max-width: min(24rem, calc(100vw - 2.5rem));
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  text-align: left;
+  color: var(--ink-soft);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* display: block перебил бы [hidden], поэтому гасим явно */
+.whereami[hidden] { display: none; }
+.whereami:hover { color: var(--ink); border-color: var(--accent); }
+.whereami:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* На широком экране слева стоит колонка навигации во всю высоту —
+   плашку сдвигаем к левому краю колонки текста, чтобы её не накрыть. */
+@media (min-width: 88rem) { .whereami { left: calc(50% - 29rem); } }
+
+/* ---------- Zen-режим: только текст ---------- */
+
+html.zen .refnav,
+html.zen .refside,
+html.zen #toc,
+html.zen .refcontrols,
+html.zen .readbar,
+html.zen .to-top,
+html.zen .whereami { display: none; }
+
+/* ---------- Плавающие контролы (команды, тема, наверх) ---------- */
+
+.refcontrols {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.refcontrols__row { display: flex; gap: 0.5rem; }
+/* Внутри контейнера кнопка «Наверх» встаёт в общий столбик */
+.refcontrols .to-top { position: static; right: auto; bottom: auto; }
+
+.refctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.5rem 0.7rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+}
+.refctl:hover { border-color: var(--accent); color: var(--accent-ink); }
+.refctl kbd {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+.refctl--theme { font-size: 1rem; padding: 0.45rem 0.7rem; }
+
+/* ---------- Подсказки клавиш в интерфейсе ---------- */
+
+.refsearch { position: relative; }
+.refsearch__field { position: relative; }
+.refsearch input { padding-right: 2rem; }
+.refsearch__hint {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.refsearch__hint kbd,
+.toc-hint kbd {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  background: var(--code-bg);
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+.toc-hint { float: right; font-weight: 400; }
+
+/* ---------- Копирование кода ---------- */
+
+.codeblock { position: relative; margin: 0 0 1.25rem; }
+.codeblock > pre { margin: 0; }
+.codecopy {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.codecopy:hover,
+.codecopy:focus-visible { opacity: 1; color: var(--accent-ink); border-color: var(--accent); }
+.codecopy.is-done { opacity: 1; color: var(--accent-ink); border-color: var(--accent); }
+
+/* ---------- Всплывающее уведомление ---------- */
+
+.ref-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 70;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.ref-toast.is-on { opacity: 1; transform: translateX(-50%); }
+
+/* Скрытое оглавление (клавиша t) */
+#toc.is-hidden { display: none; }
+
+@media print {
+  .readbar, .refcontrols, .codecopy, .ref-toast, .refsearch__hint, .toc-hint { display: none; }
+}
+
+/* ---------- Доступность и анимации ---------- */
+
+/* Единое кольцо фокуса при навигации с клавиатуры */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Счётчик результатов поиска по странице */
+.refsearch__status {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0.35rem 0 0.2rem;
+}
+.refsearch__status:empty { display: none; }
+
+/* Микро-переходы */
+a, summary { transition: color 0.15s ease; }
+.quickopen__item { transition: background-color 0.08s linear; }
+
+/* Появление и закрытие палитры и списка клавиш */
+@keyframes ref-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ref-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes ref-pop-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ref-pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(8px); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .quickopen { animation: ref-fade-in 0.14s ease-out; }
+  .quickopen__box { animation: ref-pop-in 0.16s cubic-bezier(0.2, 0.7, 0.3, 1); }
+  .quickopen--closing { animation: ref-fade-out 0.13s ease-in forwards; }
+  .quickopen--closing .quickopen__box { animation: ref-pop-out 0.13s ease-in forwards; }
+}
+.quickopen--closing { pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  a, summary, .quickopen__item, .to-top,
+  .readbar__fill, .codecopy, .ref-toast { transition: none; }
+}

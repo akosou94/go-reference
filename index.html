@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Справочники по Go</title>
+<link rel="stylesheet" href="assets/reference.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<script src="assets/reference.js"></script>
+</head>
+<body>
+<main class="reference" id="top">
+
+<div class="refside">
+<nav class="refnav refnav--rows" aria-label="Справочники">
+  <div class="refnav__row">
+    <span class="refnav__label">Справочники</span>
+    <span class="refnav__here" aria-current="page">Главная</span>
+    <a href="./ukazatel.html">Указатель</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Язык и рантайм</span>
+    <a href="./language.html">Язык</a>
+    <a href="./concurrency.html">Параллелизм</a>
+    <a href="./runtime.html">Рантайм</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Практика</span>
+    <a href="./stdlib.html">Стандартная библиотека</a>
+    <a href="./http-service.html">HTTP-сервис</a>
+    <a href="./sql.html">SQL и Postgres</a>
+    <a href="./tooling.html">Инструменты</a>
+  </div>
+  <div class="refnav__row">
+    <span class="refnav__group">Основы</span>
+    <a href="./architecture.html">Архитектура</a>
+    <a href="./examples.html">Примеры кода</a>
+  </div>
+</nav>
+
+<aside class="refkeys" aria-label="Горячие клавиши">
+  <span class="refkeys__title">Горячие клавиши</span>
+  <ul>
+    <li><kbd>/</kbd> — поиск по странице; <kbd>Enter</kbd> — следующее совпадение</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — поиск по всем справочникам (<kbd>@</kbd> — разделы)</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — в палитре вниз, <kbd>+Shift</kbd> — вверх</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> — палитра команд: что можно сделать</li>
+    <li><kbd>[</kbd> <kbd>]</kbd> — предыдущий / следующий раздел</li>
+    <li><kbd>j</kbd> / <kbd>k</kbd> — скролл вниз / вверх</li>
+    <li><kbd>g</kbd> <kbd>g</kbd> — в начало страницы</li>
+    <li><kbd>G</kbd> — в конец страницы</li>
+    <li><kbd>t</kbd> — скрыть оглавление</li>
+    <li><kbd>n</kbd> — показать/скрыть навигацию</li>
+    <li><kbd>z</kbd> — Zen-режим: только текст</li>
+    <li><kbd>y</kbd> — ссылка на раздел</li>
+    <li><kbd>Esc</kbd> — очистить поиск и снять фокус; в Zen — выйти</li>
+  </ul>
+</aside>
+</div>
+
+<header class="reference-header">
+  <p class="reference-meta">Справочники</p>
+  <h1>Справочники по Go</h1>
+  <p class="lead">Язык, стандартная библиотека и практика сервиса на Go. Материал собран из спецификации языка, Effective Go, документации пакетов и release notes Go 1.20–1.27.</p>
+</header>
+
+<div class="callout callout--info">
+  <p><strong>Версия языка — Go 1.27.</strong> В листах отмечено, с какой версии появилось поведение: per-iteration переменные цикла и <code>range</code> по целому — 1.22, <code>range</code> по функции — 1.23, generic type aliases — 1.24, <code>new(expr)</code> — 1.26, generic methods — 1.27. Где спецификация и release notes расходятся с распространённым мнением, приоритет у спецификации.</p>
+</div>
+
+<section id="language">
+  <h2>Язык</h2>
+  <ul>
+    <li><a href="./language.html">Язык</a> — <span class="is-muted">пакеты и видимость, переменные и константы, zero values, базовые типы и преобразования, строки, байты и руны, массивы и срезы, мапы, структуры и методы, embedding, интерфейсы, дженерики, ошибки, <code>defer</code>, замыкания и циклы, <code>switch</code></span></li>
+    <li><a href="./concurrency.html">Параллелизм</a> — <span class="is-muted">горутины, каналы, <code>select</code>, <code>sync</code>, <code>context</code>, паттерны, data race и memory model</span></li>
+    <li><a href="./runtime.html">Рантайм</a> — <span class="is-muted">шедулер G-M-P, сборка мусора, escape analysis, стеки горутин, <code>pprof</code> и <code>trace</code></span></li>
+  </ul>
+</section>
+
+<section id="practice">
+  <h2>Практика</h2>
+  <ul>
+    <li><a href="./stdlib.html">Стандартная библиотека</a> — <span class="is-muted"><code>net/http</code>, <code>encoding/json</code>, <code>io</code> и <code>io/fs</code>, <code>os</code>, <code>time</code>, <code>log/slog</code>, <code>strings</code> и <code>bytes</code>, <code>database/sql</code></span></li>
+    <li><a href="./http-service.html">HTTP-сервис</a> — <span class="is-muted">запрос → middleware → handler → service → repository → ответ, таймауты, graceful shutdown, ошибки как контракт, конфигурация</span></li>
+    <li><a href="./sql.html">SQL и Postgres</a> — <span class="is-muted"><code>database/sql</code>, <code>pgx</code>, транзакции, индексы, <code>EXPLAIN</code>, NULL, миграции</span></li>
+    <li><a href="./tooling.html">Инструменты</a> — <span class="is-muted"><code>go mod</code> и workspace, <code>go test</code>, табличные тесты, fuzz, benchmark, <code>vet</code>, <code>staticcheck</code>, <code>-race</code>, delve, <code>embed</code>, cross-compile</span></li>
+  </ul>
+</section>
+
+<section id="fundamentals">
+  <h2>Основы</h2>
+  <ul>
+    <li><a href="./architecture.html">Архитектура</a> — <span class="is-muted">пакет как модуль, интерфейс на стороне потребителя, DI без фреймворка, слои и направление зависимостей, ошибки как контракт</span></li>
+    <li><a href="./examples.html">Примеры кода</a> — <span class="is-muted">сервис целиком в файлах: домен, хранилище, HTTP, конфигурация, тесты</span></li>
+  </ul>
+</section>
+
+<section id="index">
+  <h2>Указатель</h2>
+  <p><a href="./ukazatel.html">Указатель</a> — одна страница, где собраны все сущности из справочников: типы, функции, методы, поля, флаги и термины. Со ссылками на место описания.</p>
+</section>
+
+<section id="keys">
+  <h2>Клавиши</h2>
+  <ul>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd> — палитра переходов: страницы, разделы и сущности всех справочников.</li>
+    <li><kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> — палитра команд.</li>
+    <li><kbd>/</kbd> — поиск по странице; <kbd>Enter</kbd> — следующее совпадение, <kbd>Shift</kbd>+<kbd>Enter</kbd> — предыдущее; <kbd>Esc</kbd> — очистить.</li>
+    <li><kbd>[</kbd> и <kbd>]</kbd> — предыдущий и следующий раздел.</li>
+    <li><kbd>j</kbd> / <kbd>k</kbd> — скролл; <kbd>g</kbd> <kbd>g</kbd> — в начало, <kbd>G</kbd> — в конец.</li>
+    <li><kbd>t</kbd> — скрыть оглавление; <kbd>n</kbd> — скрыть навигацию; <kbd>z</kbd> — Zen-режим; <kbd>y</kbd> — ссылка на раздел.</li>
+  </ul>
+</section>
+
+<section id="sources">
+  <h2>Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/ref/spec">The Go Programming Language Specification</a> — нормативное описание языка</li>
+    <li><a href="https://go.dev/doc/effective_go">Effective Go</a> — идиомы и соглашения</li>
+    <li><a href="https://go.dev/doc/faq">Go FAQ</a> — типовые вопросы о типах, срезах, интерфейсах и GC</li>
+    <li><a href="https://go.dev/doc/go1.22">Release notes Go 1.22</a> — переменные цикла и <code>range</code> по целому</li>
+    <li><a href="https://go.dev/doc/go1.23">Release notes Go 1.23</a> — <code>range</code> по функции, итераторы</li>
+    <li><a href="https://go.dev/doc/go1.24">Release notes Go 1.24</a> — generic type aliases</li>
+    <li><a href="https://go.dev/doc/go1.26">Release notes Go 1.26</a> — <code>new(expr)</code></li>
+    <li><a href="https://go.dev/doc/go1.27">Release notes Go 1.27</a> — generic methods</li>
+    <li><a href="https://pkg.go.dev/">pkg.go.dev</a> — документация стандартной библиотеки и модулей</li>
+  </ul>
+</section>
+
+<footer class="reference-footer">
+  <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
+  <p class="reference-footer__links">
+    <a href="./language.html">Язык</a> ·
+    <a href="./concurrency.html">Параллелизм</a> ·
+    <a href="./runtime.html">Рантайм</a> ·
+    <a href="./stdlib.html">Стандартная библиотека</a> ·
+    <a href="./http-service.html">HTTP-сервис</a> ·
+    <a href="./sql.html">SQL и Postgres</a> ·
+    <a href="./tooling.html">Инструменты</a> ·
+    <a href="./architecture.html">Архитектура</a> ·
+    <a href="./examples.html">Примеры кода</a> ·
+    <a href="./ukazatel.html">Указатель</a>
+  </p>
+</footer>
+
+</main>
+<script src="assets/page.js"></script>
+<script src="assets/quickopen.js"></script>
+<script src="assets/backtotop.js"></script>
+</body>
+</html>
