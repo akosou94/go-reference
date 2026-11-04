@@ -61,9 +61,426 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>Архитектура — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead">Пакет как модуль, раскладка проекта, интерфейсы на стороне потребителя, зависимости и DI без фреймворка, слои, ошибки как контракт, конфигурация, жизненный цикл и тестовые швы.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из <a href="https://go.dev/doc/modules/layout">Organizing a Go module</a>, <a href="https://go.dev/blog/package-names">Package names</a>, <a href="https://go.dev/wiki/CodeReviewComments">Go Code Review Comments</a> и <a href="https://go.dev/doc/effective_go">Effective Go</a>. Примеры проверены <code>go build</code> и <code>go vet</code>.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#package">1. Пакет как модуль</a></li>
+    <li><a href="#layout">2. Раскладка проекта</a></li>
+    <li><a href="#interfaces">3. Интерфейсы на стороне потребителя</a></li>
+    <li><a href="#deps">4. Зависимости и DI без фреймворка</a></li>
+    <li><a href="#layers">5. Слои и направление зависимостей</a></li>
+    <li><a href="#errors">6. Ошибки как контракт</a></li>
+    <li><a href="#config">7. Конфигурация и жизненный цикл</a></li>
+    <li><a href="#goroutines">8. Владение горутинами</a></li>
+    <li><a href="#testing">9. Тестовые швы</a></li>
+    <li><a href="#antipatterns">10. Антипаттерны</a></li>
+    <li><a href="#sources">11. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="package">
+  <h2>1. Пакет как модуль</h2>
+
+  <p>Единица проектирования в Go — пакет, а не файл и не класс. Пакет скрывает решение за экспортированным API: снаружи видно только имена с заглавной буквы, остальное можно менять. Хороший пакет — глубокая вещь: маленький интерфейс, за которым много работы.</p>
+
+  <p>Имя пакета — часть клиентского кода: <code>http.Server</code>, <code>time.Duration</code>. Оно должно быть коротким, в нижнем регистре, без подчёркиваний и mixedCaps, обычно существительным. Имя не повторяют в именах содержимого: в пакете <code>http</code> тип называется <code>Server</code>, а не <code>HTTPServer</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Правило</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>короткое имя в нижнем регистре</td><td><code>bufio</code>, <code>http</code>, <code>time</code></td></tr>
+        <tr><td>без <code>util</code>, <code>common</code>, <code>misc</code></td><td>такое имя не говорит, что внутри, и тянет всё подряд</td></tr>
+        <tr><td>не красть имена клиента</td><td><code>bufio</code>, а не <code>buf</code>: <code>buf</code> — хорошее имя переменной</td></tr>
+        <tr><td>не повторять имя пакета</td><td><code>http.Server</code>, а не <code>http.HTTPServer</code></td></tr>
+        <tr><td>аббревиатуры в одном регистре</td><td><code>ServeHTTP</code>, <code>appID</code>, не <code>ServeHttp</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Экспортированное — контракт. Чем меньше экспортированных имён, тем свободнее рефакторинг. Если тип нужен только для реализации интерфейса, его не экспортируют.</p>
+</section>
+
+<section id="layout">
+  <h2>2. Раскладка проекта</h2>
+
+  <p>Официальная рекомендация для серверного проекта: логика — в <code>internal</code>, команды — в <code>cmd</code>. Пакеты в <code>internal</code> нельзя импортировать из других модулей, поэтому их API можно менять без оглядки на внешних пользователей.</p>
+
+  <pre><code>project-root/
+    go.mod
+    internal/
+        user/
+            user.go          // домен: типы и ошибки
+            service.go       // правила и интерфейс хранилища
+            postgres/
+                repo.go      // адаптер Postgres
+        httpapi/
+            handler.go       // транспорт
+    cmd/
+        api/
+            main.go          // сборка зависимостей
+    migrations/
+    go.sum</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Каталог</th><th>Что там</th><th>Кто импортирует</th></tr></thead>
+      <tbody>
+        <tr><td><code>internal/</code></td><td>вся логика сервиса</td><td>только этот модуль</td></tr>
+        <tr><td><code>cmd/api/</code></td><td><code>package main</code>, wiring</td><td>никто; это точка входа</td></tr>
+        <tr><td><code>pkg/</code></td><td>код, который отдают наружу</td><td>другие модули; нужен редко</td></tr>
+        <tr><td><code>migrations/</code></td><td>SQL-файлы схемы</td><td>не Go-код</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">Дословно из документации: «Server projects typically won't have packages for export… it's recommended to keep the Go packages implementing the server's logic in the internal directory… keep all Go commands together in a cmd directory». <code>pkg/</code> — соглашение, а не требование; для сервиса он обычно не нужен.</p>
+
+  <p>Пакет не должен быть свалкой по типу файла (<code>models</code>, <code>handlers</code>, <code>services</code>). Деление идёт по скрываемому решению: <code>user</code> знает про пользователей, <code>httpapi</code> — про HTTP, <code>user/postgres</code> — про SQL.</p>
+</section>
+
+<section id="interfaces">
+  <h2>3. Интерфейсы на стороне потребителя</h2>
+
+  <p>Интерфейс объявляют там, где он используется, а не там, где реализуется. Пакет-реализация возвращает конкретный тип; потребитель описывает, что ему нужно, своим маленьким интерфейсом. Тогда новый метод реализации не ломает контракт.</p>
+
+  <p class="is-muted">Дословно из Go Code Review Comments: «Go interfaces generally belong in the package that uses values of the interface type, not the package that implements those values. The implementing package should return concrete (usually pointer or struct) types». И далее: «Do not define interfaces before they are used».</p>
+
+  <pre><code>// internal/user/service.go
+package user
+
+import "context"
+
+// Repository описывает то, что нужно сервису, а не то, что умеет Postgres.
+type Repository interface {
+    Get(ctx context.Context, id int64) (User, error)
+    Save(ctx context.Context, u User) error
+}
+
+type Service struct {
+    repo Repository
+}
+
+func NewService(repo Repository) *Service {
+    return &amp;Service{repo: repo}
+}</code></pre>
+
+  <p>Чем меньше методов в интерфейсе, тем легче подделка и тем меньше поводов её менять. <code>io.Reader</code> с одним методом реализуют файл, сокет, строка, буфер и HTTP-тело; интерфейс на десять методов не реализует почти никто.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Где объявлен</th><th>Что получается</th></tr></thead>
+      <tbody>
+        <tr><td>в пакете-потребителе</td><td>контракт по потребности; реализация подстраивается</td></tr>
+        <tr><td>в пакете-реализации</td><td>реализация диктует контракт; потребитель зависит от лишнего</td></tr>
+        <tr><td>заранее, «на будущее»</td><td>интерфейс без второго потребителя и без причины</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="deps">
+  <h2>4. Зависимости и DI без фреймворка</h2>
+
+  <p>Зависимости передают явно: параметром конструктора или полем структуры. Собирают их в <code>main</code>, где видно весь граф. Глобальные переменные и <code>init</code> с побочными эффектами прячут зависимости и мешают тестам.</p>
+
+  <pre><code>func main() {
+    db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    repo := postgres.New(db)
+    svc := user.NewService(repo)
+    api := httpapi.NewHandler(svc)
+
+    mux := http.NewServeMux()
+    mux.HandleFunc("PATCH /users/{id}", api.Rename)
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Приём</th><th>Когда</th></tr></thead>
+      <tbody>
+        <tr><td>конструктор <code>NewXxx(dep)</code></td><td>зависимость обязательна</td></tr>
+        <tr><td>поле структуры</td><td>зависимость нужна методам</td></tr>
+        <tr><td>параметр метода</td><td>зависимость нужна одному вызову</td></tr>
+        <tr><td>функциональные опции</td><td>много необязательных настроек</td></tr>
+        <tr><td>глобальная переменная</td><td>почти никогда: скрытая связь и проблема в тестах</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">DI-фреймворк не обязателен: для сервиса из десяти компонентов ручная сборка в <code>main</code> читается лучше и не требует рефлексии. Фреймворк оправдан, когда граф действительно большой и генерируется.</p>
+</section>
+
+<section id="layers">
+  <h2>5. Слои и направление зависимостей</h2>
+
+  <p>Зависимости идут внутрь: транспорт знает про домен, домен не знает про транспорт и базу. Домен описывает интерфейс хранилища, адаптер его реализует, <code>main</code> соединяет.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Слой</th><th>Знает про</th><th>Не знает про</th></tr></thead>
+      <tbody>
+        <tr><td>transport (<code>httpapi</code>)</td><td>HTTP, JSON, домен</td><td>SQL, драйвер базы</td></tr>
+        <tr><td>domain (<code>user</code>)</td><td>правила и типы предметной области</td><td>HTTP, SQL, конкретную базу</td></tr>
+        <tr><td>adapter (<code>user/postgres</code>)</td><td>домен, SQL, драйвер</td><td>HTTP</td></tr>
+        <tr><td>composition (<code>cmd/api</code>)</td><td>все слои</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>// internal/user/postgres/repo.go
+package postgres
+
+import (
+    "context"
+    "database/sql"
+    "errors"
+
+    "example.com/app/internal/user"
+)
+
+type Repo struct {
+    db *sql.DB
+}
+
+func New(db *sql.DB) *Repo {
+    return &amp;Repo{db: db}
+}
+
+func (r *Repo) Get(ctx context.Context, id int64) (user.User, error) {
+    var u user.User
+    err := r.db.QueryRowContext(ctx,
+        `select id, name from users where id = $1`, id).
+        Scan(&amp;u.ID, &amp;u.Name)
+
+    if errors.Is(err, sql.ErrNoRows) {
+        return user.User{}, user.ErrNotFound
+    }
+    return u, err
+}</code></pre>
+
+  <p>Цикл импортов компилятор запрещает. Если два пакета начинают ссылаться друг на друга, это сигнал: либо они один модуль, либо интерфейс объявлен не на той стороне, либо в пакете смешаны две ответственности.</p>
+</section>
+
+<section id="errors">
+  <h2>6. Ошибки как контракт</h2>
+
+  <p>Ошибка домена — часть API. Транспорт переводит её в статус, адаптер переводит ошибку базы в ошибку домена. Наружу не уходят тексты драйвера, имена таблиц и стек.</p>
+
+  <pre><code>// internal/user/user.go
+package user
+
+import "errors"
+
+var (
+    ErrNotFound    = errors.New("user not found")
+    ErrInvalidName = errors.New("invalid name")
+)</code></pre>
+
+  <pre><code>// internal/httpapi/handler.go
+func (h *Handler) Rename(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+    if err != nil {
+        writeError(w, http.StatusBadRequest, "invalid_id")
+        return
+    }
+
+    var req struct {
+        Name string `json:"name"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&amp;req); err != nil {
+        writeError(w, http.StatusBadRequest, "invalid_json")
+        return
+    }
+
+    if err := h.users.Rename(r.Context(), id, req.Name); err != nil {
+        switch {
+        case errors.Is(err, user.ErrNotFound):
+            writeError(w, http.StatusNotFound, "not_found")
+        case errors.Is(err, user.ErrInvalidName):
+            writeError(w, http.StatusBadRequest, "invalid_name")
+        default:
+            slog.Error("rename", "err", err)
+            writeError(w, http.StatusInternalServerError, "internal")
+        }
+        return
+    }
+    w.WriteHeader(http.StatusNoContent)
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Правило</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>оборачивать с контекстом <code>%w</code></td><td>цепочка сохраняет исходную ошибку для <code>Is</code>/<code>As</code></td></tr>
+        <tr><td>текст ошибки — строчными, без точки</td><td>её печатают после другого контекста</td></tr>
+        <tr><td>переводить на границе слоя</td><td>домен не зависит от драйвера</td></tr>
+        <tr><td>не логировать и не возвращать одну ошибку дважды</td><td>дубли в логе и потеря статуса</td></tr>
+        <tr><td><code>panic</code> — только для программных дефектов</td><td>ожидаемые ошибки возвращают через <code>error</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="config">
+  <h2>7. Конфигурация и жизненный цикл</h2>
+
+  <p>Конфигурация — структура с значениями по умолчанию, которую заполняют из окружения и флагов и проверяют один раз на старте. Дальше по коду передаётся готовая структура, а не <code>os.Getenv</code> в каждом месте.</p>
+
+  <pre><code>type Config struct {
+    Addr            string
+    DatabaseURL     string
+    ShutdownTimeout time.Duration
+}
+
+func Load() (Config, error) {
+    cfg := Config{
+        Addr:            envOr("ADDR", ":8080"),
+        DatabaseURL:     os.Getenv("DATABASE_URL"),
+        ShutdownTimeout: 10 * time.Second,
+    }
+    if cfg.DatabaseURL == "" {
+        return Config{}, errors.New("DATABASE_URL is required")
+    }
+    return cfg, nil
+}</code></pre>
+
+  <p>Жизненный цикл: <code>main</code> собирает зависимости, запускает <code>run(ctx)</code>, ждёт сигнал, останавливает сервер. <code>os.Exit</code> и <code>log.Fatal</code> допустимы только в <code>main</code>: они пропускают <code>defer</code>.</p>
+
+  <pre><code>func main() {
+    ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+    defer stop()
+
+    if err := run(ctx); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run(ctx context.Context) error {
+    cfg, err := Load()
+    if err != nil {
+        return err
+    }
+
+    db, err := sql.Open("pgx", cfg.DatabaseURL)
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    // сборка и запуск сервера
+    return serve(ctx, cfg, db)
+}</code></pre>
+</section>
+
+<section id="goroutines">
+  <h2>8. Владение горутинами</h2>
+
+  <p>Кто запустил горутину, тот отвечает за её остановку. Функция не должна оставлять горутину, которая переживёт вызов, если это не описано в контракте. Синхронная функция с возвратом результата проще для вызывающего и для тестов.</p>
+
+  <p class="is-muted">Дословно из Go Code Review Comments: «Prefer synchronous functions… Synchronous functions keep goroutines localized within a call, making it easier to reason about their lifetimes and avoid leaks and data races».</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Кто запускает</th><th>Кто останавливает</th><th>Как</th></tr></thead>
+      <tbody>
+        <tr><td>HTTP-сервер</td><td><code>main</code></td><td><code>Shutdown(ctx)</code></td></tr>
+        <tr><td>фоновый воркер</td><td>владелец воркера</td><td><code>ctx</code> и <code>Wait</code></td></tr>
+        <tr><td>обработчик запроса</td><td>сам обработчик</td><td>дождаться или отменить через <code>ctx</code></td></tr>
+        <tr><td>библиотечная функция</td><td>вызывающий</td><td>вернуть <code>stop</code>/<code>cancel</code> или быть синхронной</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="testing">
+  <h2>9. Тестовые швы</h2>
+
+  <p>Шов — место, где зависимость можно подменить. В Go это маленький интерфейс на стороне потребителя, <code>httptest</code> для транспорта и настоящая база для адаптера. Моки на всё подряд делают тесты хрупкими и не проверяют SQL.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Что тестируем</th><th>Чем</th></tr></thead>
+      <tbody>
+        <tr><td>правила домена</td><td>обычные тесты, без зависимостей</td></tr>
+        <tr><td>сервис</td><td>фейковый <code>Repository</code> в памяти</td></tr>
+        <tr><td>HTTP</td><td><code>httptest.NewRecorder</code> или <code>NewServer</code></td></tr>
+        <tr><td>SQL-адаптер</td><td>настоящий Postgres, транзакция с откатом</td></tr>
+        <tr><td>внешний HTTP</td><td><code>httptest.NewServer</code> вместо реального хоста</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>type fakeRepo struct {
+    users map[int64]user.User
+}
+
+func (f *fakeRepo) Get(ctx context.Context, id int64) (user.User, error) {
+    u, ok := f.users[id]
+    if !ok {
+        return user.User{}, user.ErrNotFound
+    }
+    return u, nil
+}
+
+func (f *fakeRepo) Save(ctx context.Context, u user.User) error {
+    f.users[u.ID] = u
+    return nil
+}</code></pre>
+
+  <p class="is-muted">Фейк проверяет поведение сервиса, но не SQL. Ошибки в запросах, типах и ограничениях ловит только тест на реальной базе — это разные уровни, и один не заменяет другой.</p>
+</section>
+
+<section id="antipatterns">
+  <h2>10. Антипаттерны</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Симптом</th><th>Что происходит</th><th>Что делать</th></tr></thead>
+      <tbody>
+        <tr><td><code>util</code>, <code>common</code>, <code>helpers</code></td><td>пакет без темы, в него стекается всё</td><td>разложить по решаемой задаче</td></tr>
+        <tr><td><code>models</code> со всеми структурами</td><td>домен, DTO и строки БД в одном месте</td><td>держать тип рядом с поведением</td></tr>
+        <tr><td>интерфейс на десять методов</td><td>реализуют один-два типа, тесты громоздкие</td><td>разбить на маленькие по потребителю</td></tr>
+        <tr><td>интерфейс в пакете-реализации</td><td>потребитель зависит от лишнего</td><td>объявить интерфейс у потребителя</td></tr>
+        <tr><td>глобальный конфиг и <code>init</code> с побочными эффектами</td><td>скрытые зависимости, тесты зависят от порядка</td><td>передавать явно, собирать в <code>main</code></td></tr>
+        <tr><td><code>panic</code> на ожидаемой ошибке</td><td>сервис падает от плохого ввода</td><td>вернуть <code>error</code></td></tr>
+        <tr><td>ошибка базы наружу</td><td>утечка схемы и текста драйвера</td><td>перевести в ошибку домена</td></tr>
+        <tr><td>горутина без владельца</td><td>утечка и гонки при завершении</td><td><code>ctx</code>, <code>Wait</code>, явный <code>stop</code></td></tr>
+        <tr><td>цикл импортов</td><td>компилятор не собирает пакет</td><td>вынести общий тип или развернуть интерфейс</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="sources">
+  <h2>11. Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/doc/modules/layout">Organizing a Go module</a> — <code>internal</code>, <code>cmd</code>, серверный проект</li>
+    <li><a href="https://go.dev/blog/package-names">Package names</a> — имена пакетов и содержимого</li>
+    <li><a href="https://go.dev/wiki/CodeReviewComments">Go Code Review Comments</a> — интерфейсы, ошибки, синхронные функции, инициализмы</li>
+    <li><a href="https://go.dev/doc/effective_go">Effective Go</a> — интерфейсы, встраивание, ошибки</li>
+    <li><a href="https://go.dev/blog/error-handling-and-go">Error handling and Go</a> — ошибки как значения</li>
+    <li><a href="https://go.dev/blog/go1.13-errors">Working with Errors in Go 1.13</a> — <code>%w</code>, <code>Is</code>, <code>As</code></li>
+    <li><a href="https://pkg.go.dev/net/http/httptest">pkg.go.dev/net/http/httptest</a> — тестовый транспорт</li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>

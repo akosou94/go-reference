@@ -67,7 +67,7 @@
 
 <div class="callout callout--info">
   <p>Каждая строка — сущность и ссылка на место, где она описана. Имена взяты из заголовков и из первых колонок таблиц этих страниц.</p>
-  <p>Всего записей: <strong>535</strong> — Язык 91 · Параллелизм 57 · Рантайм 58 · Стандартная библиотека 107 · HTTP-сервис 64 · SQL и Postgres 75 · Инструменты 83.</p>
+  <p>Всего записей: <strong>614</strong> — Язык 91 · Параллелизм 57 · Рантайм 58 · Стандартная библиотека 107 · HTTP-сервис 64 · SQL и Postgres 75 · Инструменты 83 · Архитектура 55 · Примеры кода 24.</p>
 </div>
 
 <section id="filter">
@@ -90,20 +90,25 @@
 <li><a href="./stdlib.html#strings">1. strings и bytes</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./runtime.html#binary">1. Бинарник и рантайм</a> <span class="idx-src">Рантайм · 1. Бинарник и рантайм</span></li>
 <li><a href="./concurrency.html#goroutines">1. Горутины</a> <span class="idx-src">Параллелизм · 1. Горутины</span></li>
+<li><a href="./examples.html#tree">1. Дерево проекта</a> <span class="idx-src">Примеры кода · 1. Дерево проекта</span></li>
 <li><a href="./http-service.html#path">1. Карта запроса</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
+<li><a href="./architecture.html#package">1. Пакет как модуль</a> <span class="idx-src">Архитектура · 1. Пакет как модуль</span></li>
 <li><a href="./language.html#packages">1. Пакеты, файлы, видимость</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./http-service.html#path">1. Соединение</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
 <li><a href="./stdlib.html#collections">10. slices, maps, cmp, sort</a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
+<li><a href="./architecture.html#antipatterns">10. Антипаттерны</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 <li><a href="./http-service.html#observability">10. Наблюдаемость</a> <span class="idx-src">HTTP-сервис · 10. Наблюдаемость</span></li>
 <li><a href="./language.html#errors">10. Ошибки, panic, recover</a> <span class="idx-src">Язык · 10. Ошибки, panic, recover</span></li>
 <li><a href="./concurrency.html#sources">10. Первоисточники</a> <span class="idx-src">Параллелизм · 10. Первоисточники</span></li>
 <li><a href="./runtime.html#sources">10. Первоисточники</a> <span class="idx-src">Рантайм · 10. Первоисточники</span></li>
+<li><a href="./examples.html#sources">10. Первоисточники</a> <span class="idx-src">Примеры кода · 10. Первоисточники</span></li>
 <li><a href="./tooling.html#build">10. Сборка и релиз</a> <span class="idx-src">Инструменты · 10. Сборка и релиз</span></li>
 <li><a href="./sql.html#testing">10. Тестирование</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./language.html#defer">11. defer</a> <span class="idx-src">Язык · 11. defer</span></li>
 <li><a href="./stdlib.html#embed">11. embed</a> <span class="idx-src">Стандартная библиотека · 11. embed</span></li>
 <li><a href="./sql.html#sources">11. Первоисточники</a> <span class="idx-src">SQL и Postgres · 11. Первоисточники</span></li>
 <li><a href="./tooling.html#sources">11. Первоисточники</a> <span class="idx-src">Инструменты · 11. Первоисточники</span></li>
+<li><a href="./architecture.html#sources">11. Первоисточники</a> <span class="idx-src">Архитектура · 11. Первоисточники</span></li>
 <li><a href="./http-service.html#testing">11. Тестирование</a> <span class="idx-src">HTTP-сервис · 11. Тестирование</span></li>
 <li><a href="./language.html#control">12. Замыкания, циклы, switch</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
 <li><a href="./stdlib.html#sources">12. Первоисточники</a> <span class="idx-src">Стандартная библиотека · 12. Первоисточники</span></li>
@@ -111,12 +116,14 @@
 <li><a href="./language.html#sources">13. Первоисточники</a> <span class="idx-src">Язык · 13. Первоисточники</span></li>
 <li><a href="./http-service.html#server">2. Server и таймауты</a> <span class="idx-src">HTTP-сервис · 2. Server и таймауты</span></li>
 <li><a href="./stdlib.html#strconv">2. strconv</a> <span class="idx-src">Стандартная библиотека · 2. strconv</span></li>
+<li><a href="./examples.html#domain">2. Домен: заявка и переходы</a> <span class="idx-src">Примеры кода · 2. Домен: заявка и переходы</span></li>
 <li><a href="./sql.html#queries">2. Запросы и сканирование</a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
 <li><a href="./concurrency.html#channels">2. Каналы</a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./http-service.html#path">2. Маршрут</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
 <li><a href="./tooling.html#modules">2. Модули и версии</a> <span class="idx-src">Инструменты · 2. Модули и версии</span></li>
 <li><a href="./language.html#values">2. Переменные, константы, zero value</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
 <li><a href="./runtime.html#scheduler">2. Планировщик: G, M, P</a> <span class="idx-src">Рантайм · 2. Планировщик: G, M, P</span></li>
+<li><a href="./architecture.html#layout">2. Раскладка проекта</a> <span class="idx-src">Архитектура · 2. Раскладка проекта</span></li>
 <li><a href="./sql.html#errors"><code>23502</code> not_null_violation</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./sql.html#errors"><code>23503</code> foreign_key_violation</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./sql.html#errors"><code>23505</code> unique_violation</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
@@ -127,24 +134,30 @@
 <li><a href="./http-service.html#mux">3. ServeMux и маршруты</a> <span class="idx-src">HTTP-сервис · 3. ServeMux и маршруты</span></li>
 <li><a href="./tooling.html#workspaces">3. Workspaces</a> <span class="idx-src">Инструменты · 3. Workspaces</span></li>
 <li><a href="./language.html#types">3. Базовые типы и преобразования</a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./architecture.html#interfaces">3. Интерфейсы на стороне потребителя</a> <span class="idx-src">Архитектура · 3. Интерфейсы на стороне потребителя</span></li>
+<li><a href="./examples.html#service">3. Сервис: сценарии</a> <span class="idx-src">Примеры кода · 3. Сервис: сценарии</span></li>
 <li><a href="./runtime.html#stacks">3. Стеки горутин</a> <span class="idx-src">Рантайм · 3. Стеки горутин</span></li>
 <li><a href="./http-service.html#path">4. Handler</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
 <li><a href="./http-service.html#middleware">4. Handler и middleware</a> <span class="idx-src">HTTP-сервис · 4. Handler и middleware</span></li>
 <li><a href="./stdlib.html#io">4. io, io/fs, bufio</a> <span class="idx-src">Стандартная библиотека · 4. io, io/fs, bufio</span></li>
 <li><a href="./sql.html#pgx">4. pgx</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
+<li><a href="./examples.html#repo">4. Postgres: адаптер и optimistic locking</a> <span class="idx-src">Примеры кода · 4. Postgres: адаптер и optimistic locking</span></li>
 <li><a href="./concurrency.html#sync">4. sync: мьютексы, WaitGroup, Once, Pool, Map</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
 <li><a href="./runtime.html#allocator">4. Аллокатор памяти</a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
+<li><a href="./architecture.html#deps">4. Зависимости и DI без фреймворка</a> <span class="idx-src">Архитектура · 4. Зависимости и DI без фреймворка</span></li>
 <li><a href="./language.html#strings">4. Строки, байты, руны</a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
 <li><a href="./tooling.html#testing">4. Тесты</a> <span class="idx-src">Инструменты · 4. Тесты</span></li>
 <li><a href="./sql.html#errors"><code>40001</code> serialization_failure</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./sql.html#errors"><code>40P01</code> deadlock_detected</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./concurrency.html#context">5. context</a> <span class="idx-src">Параллелизм · 5. context</span></li>
 <li><a href="./tooling.html#fuzzing">5. Fuzzing</a> <span class="idx-src">Инструменты · 5. Fuzzing</span></li>
+<li><a href="./examples.html#http">5. HTTP: DTO и ошибки</a> <span class="idx-src">Примеры кода · 5. HTTP: DTO и ошибки</span></li>
 <li><a href="./stdlib.html#os">5. os, os/exec, path/filepath</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
 <li><a href="./http-service.html#request">5. Request: тело, лимиты, контекст</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./language.html#slices">5. Массивы и срезы</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
 <li><a href="./runtime.html#gc">5. Сборка мусора</a> <span class="idx-src">Рантайм · 5. Сборка мусора</span></li>
 <li><a href="./http-service.html#path">5. Сервис</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
+<li><a href="./architecture.html#layers">5. Слои и направление зависимостей</a> <span class="idx-src">Архитектура · 5. Слои и направление зависимостей</span></li>
 <li><a href="./sql.html#transactions">5. Транзакции и изоляция</a> <span class="idx-src">SQL и Postgres · 5. Транзакции и изоляция</span></li>
 <li><a href="./sql.html#errors"><code>57014</code> query_canceled</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./runtime.html#gc-tuning">6. GOGC и GOMEMLIMIT</a> <span class="idx-src">Рантайм · 6. GOGC и GOMEMLIMIT</span></li>
@@ -155,18 +168,24 @@
 <li><a href="./concurrency.html#memory-model">6. Модель памяти и data race</a> <span class="idx-src">Параллелизм · 6. Модель памяти и data race</span></li>
 <li><a href="./http-service.html#path">6. Ответ</a> <span class="idx-src">HTTP-сервис · 1. Карта запроса</span></li>
 <li><a href="./sql.html#errors">6. Ошибки и SQLSTATE</a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
+<li><a href="./architecture.html#errors">6. Ошибки как контракт</a> <span class="idx-src">Архитектура · 6. Ошибки как контракт</span></li>
+<li><a href="./examples.html#main">6. Сборка в main</a> <span class="idx-src">Примеры кода · 6. Сборка в main</span></li>
 <li><a href="./stdlib.html#json">7. encoding/json</a> <span class="idx-src">Стандартная библиотека · 7. encoding/json</span></li>
 <li><a href="./runtime.html#escape">7. Escape analysis</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 <li><a href="./sql.html#indexes">7. Индексы</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
+<li><a href="./architecture.html#config">7. Конфигурация и жизненный цикл</a> <span class="idx-src">Архитектура · 7. Конфигурация и жизненный цикл</span></li>
 <li><a href="./http-service.html#errors">7. Ошибки как контракт</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./concurrency.html#patterns">7. Паттерны</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
 <li><a href="./tooling.html#static">7. Статический анализ</a> <span class="idx-src">Инструменты · 7. Статический анализ</span></li>
 <li><a href="./language.html#structs">7. Структуры, методы, embedding</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+<li><a href="./examples.html#tests">7. Тесты</a> <span class="idx-src">Примеры кода · 7. Тесты</span></li>
 <li><a href="./sql.html#explain">8. EXPLAIN и планы</a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./http-service.html#shutdown">8. Graceful shutdown</a> <span class="idx-src">HTTP-сервис · 8. Graceful shutdown</span></li>
 <li><a href="./stdlib.html#http">8. net/http</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
 <li><a href="./tooling.html#race">8. Race detector</a> <span class="idx-src">Инструменты · 8. Race detector</span></li>
+<li><a href="./architecture.html#goroutines">8. Владение горутинами</a> <span class="idx-src">Архитектура · 8. Владение горутинами</span></li>
 <li><a href="./language.html#interfaces">8. Интерфейсы</a> <span class="idx-src">Язык · 8. Интерфейсы</span></li>
+<li><a href="./examples.html#migration">8. Миграция</a> <span class="idx-src">Примеры кода · 8. Миграция</span></li>
 <li><a href="./concurrency.html#errors">8. Ошибки, паника и завершение</a> <span class="idx-src">Параллелизм · 8. Ошибки, паника и завершение</span></li>
 <li><a href="./runtime.html#pprof">8. Профилирование</a> <span class="idx-src">Рантайм · 8. Профилирование</span></li>
 <li><a href="./stdlib.html#slog">9. log/slog</a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
@@ -176,10 +195,13 @@
 <li><a href="./sql.html#migrations">9. Миграции</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./tooling.html#profiling">9. Профилирование и отладка</a> <span class="idx-src">Инструменты · 9. Профилирование и отладка</span></li>
 <li><a href="./concurrency.html#testing">9. Тестирование конкурентного кода</a> <span class="idx-src">Параллелизм · 9. Тестирование конкурентного кода</span></li>
+<li><a href="./architecture.html#testing">9. Тестовые швы</a> <span class="idx-src">Архитектура · 9. Тестовые швы</span></li>
+<li><a href="./examples.html#growth">9. Что менять при росте</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
 <li><a href="./language.html#packages"><code>_</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 </ul>
 <h3 id="grp-a" class="idx-group">A</h3>
 <ul class="idx-list">
+<li><a href="./architecture.html#layers">adapter (<code>user/postgres</code>)</a> <span class="idx-src">Архитектура · 5. Слои и направление зависимостей</span></li>
 <li><a href="./sql.html#migrations">advisory lock</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
 <li><a href="./language.html#types"><code>any</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#generics"><code>any</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
@@ -218,10 +240,13 @@
 <li><a href="./language.html#types"><code>clear(s)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./http-service.html#client"><code>Client.Timeout</code></a> <span class="idx-src">HTTP-сервис · 9. Клиент</span></li>
 <li><a href="./concurrency.html#channels"><code>close(ch)</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
+<li><a href="./architecture.html#layout"><code>cmd/api/</code></a> <span class="idx-src">Архитектура · 2. Раскладка проекта</span></li>
+<li><a href="./examples.html#tree"><code>cmd/api/main.go</code></a> <span class="idx-src">Примеры кода · 1. Дерево проекта</span></li>
 <li><a href="./stdlib.html#collections"><code>cmp</code></a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
 <li><a href="./sql.html#null"><code>COALESCE(col, '')</code></a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
 <li><a href="./language.html#generics"><code>comparable</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
 <li><a href="./language.html#types"><code>complex64</code>, <code>complex128</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./architecture.html#layers">composition (<code>cmd/api</code>)</a> <span class="idx-src">Архитектура · 5. Слои и направление зависимостей</span></li>
 <li><a href="./concurrency.html#cond-atomic">Cond и atomic</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
 <li><a href="./http-service.html#server"><code>ConnContext</code></a> <span class="idx-src">HTTP-сервис · 2. Server и таймауты</span></li>
 <li><a href="./concurrency.html#context"><code>context.Background()</code></a> <span class="idx-src">Параллелизм · 5. context</span></li>
@@ -237,6 +262,7 @@
 <li><a href="./stdlib.html#slog"><code>Debug</code>, <code>Info</code>, <code>Warn</code>, <code>Error</code></a> <span class="idx-src">Стандартная библиотека · 9. log/slog</span></li>
 <li><a href="./language.html#maps"><code>delete(m, k)</code></a> <span class="idx-src">Язык · 6. Мапы</span></li>
 <li><a href="./tooling.html#profiling"><code>dlv debug</code>, <code>dlv test</code>, <code>dlv attach</code></a> <span class="idx-src">Инструменты · 9. Профилирование и отладка</span></li>
+<li><a href="./architecture.html#layers">domain (<code>user</code>)</a> <span class="idx-src">Архитектура · 5. Слои и направление зависимостей</span></li>
 </ul>
 <h3 id="grp-e" class="idx-group">E</h3>
 <ul class="idx-list">
@@ -326,6 +352,10 @@
 <li><a href="./sql.html#indexes">hash</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./sql.html#explain"><code>Hash Join</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./runtime.html#pprof"><code>heap</code></a> <span class="idx-src">Рантайм · 8. Профилирование</span></li>
+<li><a href="./architecture.html#testing">HTTP</a> <span class="idx-src">Архитектура · 9. Тестовые швы</span></li>
+<li><a href="./examples.html#test-http">HTTP</a> <span class="idx-src">Примеры кода · 7. Тесты</span></li>
+<li><a href="./architecture.html#goroutines">HTTP-сервер</a> <span class="idx-src">Архитектура · 8. Владение горутинами</span></li>
+<li><a href="./examples.html#tree"><code>httpapi/handler.go</code></a> <span class="idx-src">Примеры кода · 1. Дерево проекта</span></li>
 </ul>
 <h3 id="grp-i" class="idx-group">I</h3>
 <ul class="idx-list">
@@ -340,6 +370,7 @@
 <li><a href="./language.html#generics"><code>int | string</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
 <li><a href="./language.html#types"><code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#generics"><code>interface{ M() }</code></a> <span class="idx-src">Язык · 9. Дженерики</span></li>
+<li><a href="./architecture.html#layout"><code>internal/</code></a> <span class="idx-src">Архитектура · 2. Раскладка проекта</span></li>
 <li><a href="./stdlib.html#io"><code>io.ByteReader</code></a> <span class="idx-src">Стандартная библиотека · 4. io, io/fs, bufio</span></li>
 <li><a href="./stdlib.html#io"><code>io.Closer</code></a> <span class="idx-src">Стандартная библиотека · 4. io, io/fs, bufio</span></li>
 <li><a href="./stdlib.html#io"><code>io.Copy</code>, <code>io.CopyN</code>, <code>io.CopyBuffer</code></a> <span class="idx-src">Стандартная библиотека · 4. io, io/fs, bufio</span></li>
@@ -406,8 +437,10 @@
 <li><a href="./runtime.html#allocator"><code>mcentral</code></a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
 <li><a href="./sql.html#explain"><code>Merge Join</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./runtime.html#allocator"><code>mheap</code></a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
+<li><a href="./architecture.html#layout"><code>migrations/</code></a> <span class="idx-src">Архитектура · 2. Раскладка проекта</span></li>
 <li><a href="./language.html#types"><code>min(x, y, …)</code></a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
 <li><a href="./language.html#builtins">min, max, clear</a> <span class="idx-src">Язык · 3. Базовые типы и преобразования</span></li>
+<li><a href="./architecture.html#antipatterns"><code>models</code> со всеми структурами</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 <li><a href="./tooling.html#modules"><code>module</code></a> <span class="idx-src">Инструменты · 2. Модули и версии</span></li>
 <li><a href="./runtime.html#allocator"><code>mspan</code></a> <span class="idx-src">Рантайм · 4. Аллокатор памяти</span></li>
 <li><a href="./concurrency.html#memory-model"><code>Mutex</code></a> <span class="idx-src">Параллелизм · 6. Модель памяти и data race</span></li>
@@ -429,13 +462,19 @@
 <li><a href="./concurrency.html#memory-model"><code>Once</code></a> <span class="idx-src">Параллелизм · 6. Модель памяти и data race</span></li>
 <li><a href="./concurrency.html#once">Once и OnceFunc</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
 <li><a href="./concurrency.html#patterns">or-done</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
+<li><a href="./examples.html#tree"><code>order/order.go</code></a> <span class="idx-src">Примеры кода · 1. Дерево проекта</span></li>
+<li><a href="./examples.html#tree"><code>order/postgres/repo.go</code></a> <span class="idx-src">Примеры кода · 1. Дерево проекта</span></li>
+<li><a href="./examples.html#tree"><code>order/service.go</code></a> <span class="idx-src">Примеры кода · 1. Дерево проекта</span></li>
 </ul>
 <h3 id="grp-p" class="idx-group">P</h3>
 <ul class="idx-list">
 <li><a href="./stdlib.html#fmt"><code>%p</code></a> <span class="idx-src">Стандартная библиотека · 3. fmt</span></li>
 <li><a href="./concurrency.html#goroutines"><code>P</code></a> <span class="idx-src">Параллелизм · 1. Горутины</span></li>
+<li><a href="./architecture.html#antipatterns"><code>panic</code> на ожидаемой ошибке</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
+<li><a href="./architecture.html#errors"><code>panic</code> — только для программных дефектов</a> <span class="idx-src">Архитектура · 6. Ошибки как контракт</span></li>
 <li><a href="./sql.html#indexes">partial</a> <span class="idx-src">SQL и Postgres · 7. Индексы</span></li>
 <li><a href="./concurrency.html#pipeline">Pipeline</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
+<li><a href="./architecture.html#layout"><code>pkg/</code></a> <span class="idx-src">Архитектура · 2. Раскладка проекта</span></li>
 <li><a href="./concurrency.html#pool">Pool</a> <span class="idx-src">Параллелизм · 4. sync: мьютексы, WaitGroup, Once, Pool, Map</span></li>
 <li><a href="./sql.html#queries"><code>PrepareContext</code></a> <span class="idx-src">SQL и Postgres · 2. Запросы и сканирование</span></li>
 </ul>
@@ -480,6 +519,7 @@
 <li><a href="./stdlib.html#collections"><code>sort</code></a> <span class="idx-src">Стандартная библиотека · 10. slices, maps, cmp, sort</span></li>
 <li><a href="./sql.html#explain"><code>Sort</code>, <code>HashAggregate</code>, <code>GroupAggregate</code></a> <span class="idx-src">SQL и Postgres · 8. EXPLAIN и планы</span></li>
 <li><a href="./sql.html#testing">SQL и типы</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
+<li><a href="./architecture.html#testing">SQL-адаптер</a> <span class="idx-src">Архитектура · 9. Тестовые швы</span></li>
 <li><a href="./sql.html#errors"><code>sql.ErrNoRows</code></a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./sql.html#errors"><code>sql.ErrTxDone</code></a> <span class="idx-src">SQL и Postgres · 6. Ошибки и SQLSTATE</span></li>
 <li><a href="./sql.html#null"><code>sql.Null[T]</code></a> <span class="idx-src">SQL и Postgres · 3. NULL</span></li>
@@ -514,6 +554,7 @@
 <li><a href="./runtime.html#pprof"><code>threadcreate</code></a> <span class="idx-src">Рантайм · 8. Профилирование</span></li>
 <li><a href="./tooling.html#modules"><code>tool</code></a> <span class="idx-src">Инструменты · 2. Модули и версии</span></li>
 <li><a href="./tooling.html#modules"><code>toolchain</code></a> <span class="idx-src">Инструменты · 2. Модули и версии</span></li>
+<li><a href="./architecture.html#layers">transport (<code>httpapi</code>)</a> <span class="idx-src">Архитектура · 5. Слои и направление зависимостей</span></li>
 <li><a href="./http-service.html#client"><code>Transport.IdleConnTimeout</code></a> <span class="idx-src">HTTP-сервис · 9. Клиент</span></li>
 <li><a href="./http-service.html#client"><code>Transport.MaxIdleConns</code></a> <span class="idx-src">HTTP-сервис · 9. Клиент</span></li>
 <li><a href="./http-service.html#client"><code>Transport.MaxIdleConnsPerHost</code></a> <span class="idx-src">HTTP-сервис · 9. Клиент</span></li>
@@ -531,6 +572,7 @@
 <li><a href="./language.html#packages"><code>User</code>, <code>NewUser</code>, <code>(*User).Save</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./language.html#packages"><code>user</code>, <code>newUser</code>, <code>save</code></a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
 <li><a href="./language.html#strings"><code>utf8.RuneCountInString(s)</code></a> <span class="idx-src">Язык · 4. Строки, байты, руны</span></li>
+<li><a href="./architecture.html#antipatterns"><code>util</code>, <code>common</code>, <code>helpers</code></a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 </ul>
 <h3 id="grp-v" class="idx-group">V</h3>
 <ul class="idx-list">
@@ -563,28 +605,41 @@
 </ul>
 <h3 id="grp-cyr-a" class="idx-group">А</h3>
 <ul class="idx-list">
+<li><a href="./architecture.html#package">аббревиатуры в одном регистре</a> <span class="idx-src">Архитектура · 1. Пакет как модуль</span></li>
 <li><a href="./stdlib.html#time">арифметика</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./runtime.html#scheduler">асинхронное вытеснение</a> <span class="idx-src">Рантайм · 2. Планировщик: G, M, P</span></li>
+<li><a href="./examples.html#growth">аутентификация</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
 </ul>
 <h3 id="grp-cyr-b" class="idx-group">Б</h3>
 <ul class="idx-list">
+<li><a href="./architecture.html#package">без <code>util</code>, <code>common</code>, <code>misc</code></a> <span class="idx-src">Архитектура · 1. Пакет как модуль</span></li>
 <li><a href="./stdlib.html#os">безопасный доступ [1.24]</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
+<li><a href="./architecture.html#goroutines">библиотечная функция</a> <span class="idx-src">Архитектура · 8. Владение горутинами</span></li>
 </ul>
 <h3 id="grp-cyr-v" class="idx-group">В</h3>
 <ul class="idx-list">
+<li><a href="./architecture.html#interfaces">в пакете-потребителе</a> <span class="idx-src">Архитектура · 3. Интерфейсы на стороне потребителя</span></li>
+<li><a href="./architecture.html#interfaces">в пакете-реализации</a> <span class="idx-src">Архитектура · 3. Интерфейсы на стороне потребителя</span></li>
 <li><a href="./runtime.html#gc-tuning">вернуть память ОС</a> <span class="idx-src">Рантайм · 6. GOGC и GOMEMLIMIT</span></li>
+<li><a href="./architecture.html#testing">внешний HTTP</a> <span class="idx-src">Архитектура · 9. Тестовые швы</span></li>
 <li><a href="./http-service.html#errors">внутренняя ошибка</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./runtime.html#escape">возврат указателя</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 <li><a href="./language.html#embedding">Встраивание</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
+<li><a href="./examples.html#growth">второе хранилище</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
+<li><a href="./examples.html#growth">второй транспорт (gRPC)</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
 </ul>
 <h3 id="grp-cyr-g" class="idx-group">Г</h3>
 <ul class="idx-list">
 <li><a href="./http-service.html#observability">гистограмма <code>http_request_duration_seconds</code></a> <span class="idx-src">HTTP-сервис · 10. Наблюдаемость</span></li>
 <li><a href="./runtime.html#scheduler">глобальная очередь</a> <span class="idx-src">Рантайм · 2. Планировщик: G, M, P</span></li>
+<li><a href="./architecture.html#deps">глобальная переменная</a> <span class="idx-src">Архитектура · 4. Зависимости и DI без фреймворка</span></li>
+<li><a href="./architecture.html#antipatterns">глобальный конфиг и <code>init</code> с побочными эффектами</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
+<li><a href="./architecture.html#antipatterns">горутина без владельца</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 </ul>
 <h3 id="grp-cyr-d" class="idx-group">Д</h3>
 <ul class="idx-list">
 <li><a href="./language.html#slices">Длина в типе</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
+<li><a href="./examples.html#test-domain">Домен</a> <span class="idx-src">Примеры кода · 7. Тесты</span></li>
 <li><a href="./stdlib.html#strconv">дописывание в срез</a> <span class="idx-src">Стандартная библиотека · 2. strconv</span></li>
 <li><a href="./stdlib.html#strconv">дробное</a> <span class="idx-src">Стандартная библиотека · 2. strconv</span></li>
 </ul>
@@ -597,6 +652,7 @@
 <li><a href="./runtime.html#escape">запись в глобальную переменную</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 <li><a href="./stdlib.html#http">запрос</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
 <li><a href="./sql.html#pgx">запрос</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
+<li><a href="./architecture.html#interfaces">заранее, «на будущее»</a> <span class="idx-src">Архитектура · 3. Интерфейсы на стороне потребителя</span></li>
 <li><a href="./runtime.html#escape">захват замыканием, которое живёт дольше</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 </ul>
 <h3 id="grp-cyr-i" class="idx-group">И</h3>
@@ -606,7 +662,10 @@
 <li><a href="./sql.html#testing">изоляция</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./sql.html#testing">изоляция тестов</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./language.html#init">Инициализация пакета</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./architecture.html#antipatterns">интерфейс в пакете-реализации</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
+<li><a href="./architecture.html#antipatterns">интерфейс на десять методов</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 <li><a href="./stdlib.html#strings">итераторы [1.24]</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
+<li><a href="./architecture.html#antipatterns">цикл импортов</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 </ul>
 <h3 id="grp-cyr-k" class="idx-group">К</h3>
 <ul class="idx-list">
@@ -617,9 +676,11 @@
 <li><a href="./stdlib.html#http">клиент</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
 <li><a href="./runtime.html#binary">код программы</a> <span class="idx-src">Рантайм · 1. Бинарник и рантайм</span></li>
 <li><a href="./language.html#constants">Константы и iota</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./architecture.html#deps">конструктор <code>NewXxx(dep)</code></a> <span class="idx-src">Архитектура · 4. Зависимости и DI без фреймворка</span></li>
 <li><a href="./http-service.html#request">контекст</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./http-service.html#errors">конфликт версий или уникальности</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./stdlib.html#os">копирование дерева [1.23]</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
+<li><a href="./architecture.html#package">короткое имя в нижнем регистре</a> <span class="idx-src">Архитектура · 1. Пакет как модуль</span></li>
 </ul>
 <h3 id="grp-cyr-l" class="idx-group">Л</h3>
 <ul class="idx-list">
@@ -647,13 +708,19 @@
 <li><a href="./http-service.html#errors">нарушено правило домена</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./runtime.html#stacks">начальный стек</a> <span class="idx-src">Рантайм · 3. Стеки горутин</span></li>
 <li><a href="./http-service.html#errors">не аутентифицирован</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
+<li><a href="./architecture.html#package">не красть имена клиента</a> <span class="idx-src">Архитектура · 1. Пакет как модуль</span></li>
+<li><a href="./architecture.html#errors">не логировать и не возвращать одну ошибку дважды</a> <span class="idx-src">Архитектура · 6. Ошибки как контракт</span></li>
 <li><a href="./http-service.html#errors">не найдено</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
+<li><a href="./architecture.html#package">не повторять имя пакета</a> <span class="idx-src">Архитектура · 1. Пакет как модуль</span></li>
 <li><a href="./http-service.html#errors">неверный ввод</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./runtime.html#escape">неизвестный размер</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
+<li><a href="./examples.html#growth">несколько шагов в одной транзакции</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
 <li><a href="./http-service.html#errors">нет прав</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 </ul>
 <h3 id="grp-cyr-o" class="idx-group">О</h3>
 <ul class="idx-list">
+<li><a href="./architecture.html#errors">оборачивать с контекстом <code>%w</code></a> <span class="idx-src">Архитектура · 6. Ошибки как контракт</span></li>
+<li><a href="./architecture.html#goroutines">обработчик запроса</a> <span class="idx-src">Архитектура · 8. Владение горутинами</span></li>
 <li><a href="./sql.html#testing">ограничения</a> <span class="idx-src">SQL и Postgres · 10. Тестирование</span></li>
 <li><a href="./http-service.html#request">ограничить тело</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./sql.html#migrations">одна миграция — один смысл</a> <span class="idx-src">SQL и Postgres · 9. Миграции</span></li>
@@ -668,14 +735,18 @@
 <li><a href="./concurrency.html#channels">отправка <code>ch &lt;- v</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./runtime.html#escape">отправка в канал</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 <li><a href="./http-service.html#response">ошибка</a> <span class="idx-src">HTTP-сервис · 6. Response: статус, заголовки, JSON</span></li>
+<li><a href="./architecture.html#antipatterns">ошибка базы наружу</a> <span class="idx-src">Архитектура · 10. Антипаттерны</span></li>
 </ul>
 <h3 id="grp-cyr-p" class="idx-group">П</h3>
 <ul class="idx-list">
 <li><a href="./sql.html#pgx">пакет запросов</a> <span class="idx-src">SQL и Postgres · 4. pgx</span></li>
+<li><a href="./architecture.html#deps">параметр метода</a> <span class="idx-src">Архитектура · 4. Зависимости и DI без фреймворка</span></li>
+<li><a href="./architecture.html#errors">переводить на границе слоя</a> <span class="idx-src">Архитектура · 6. Ошибки как контракт</span></li>
 <li><a href="./tooling.html#race">платформы</a> <span class="idx-src">Инструменты · 8. Race detector</span></li>
 <li><a href="./concurrency.html#channels">повторное <code>close(ch)</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./http-service.html#request">подстановка пути</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./stdlib.html#strings">поиск</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
+<li><a href="./architecture.html#deps">поле структуры</a> <span class="idx-src">Архитектура · 4. Зависимости и DI без фреймворка</span></li>
 <li><a href="./language.html#receivers">Получатели и method set</a> <span class="idx-src">Язык · 7. Структуры, методы, embedding</span></li>
 <li><a href="./concurrency.html#channels">получение <code>&lt;-ch</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
 <li><a href="./concurrency.html#channels">получение <code>v, ok := &lt;-ch</code></a> <span class="idx-src">Параллелизм · 2. Каналы</span></li>
@@ -683,6 +754,7 @@
 <li><a href="./http-service.html#response">поток</a> <span class="idx-src">HTTP-сервис · 6. Response: статус, заголовки, JSON</span></li>
 <li><a href="./stdlib.html#os">потоки</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
 <li><a href="./stdlib.html#time">пояс</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
+<li><a href="./architecture.html#testing">правила домена</a> <span class="idx-src">Архитектура · 9. Тестовые швы</span></li>
 <li><a href="./stdlib.html#strings">префикс и суффикс</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./runtime.html#gc-tuning">принудительный цикл</a> <span class="idx-src">Рантайм · 6. GOGC и GOMEMLIMIT</span></li>
 <li><a href="./language.html#slices">Присваивание</a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
@@ -702,8 +774,11 @@
 <li><a href="./stdlib.html#strings">сборка</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./concurrency.html#patterns">семафор</a> <span class="idx-src">Параллелизм · 7. Паттерны</span></li>
 <li><a href="./stdlib.html#http">сервер</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
+<li><a href="./architecture.html#testing">сервис</a> <span class="idx-src">Архитектура · 9. Тестовые швы</span></li>
+<li><a href="./examples.html#test-service">Сервис с фейком</a> <span class="idx-src">Примеры кода · 7. Тесты</span></li>
 <li><a href="./runtime.html#escape">слишком большой объект</a> <span class="idx-src">Рантайм · 7. Escape analysis</span></li>
 <li><a href="./http-service.html#errors">слишком много запросов</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
+<li><a href="./examples.html#growth">события при смене статуса</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
 <li><a href="./stdlib.html#strings">сравнение</a> <span class="idx-src">Стандартная библиотека · 1. strings и bytes</span></li>
 <li><a href="./stdlib.html#time">сравнение</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./language.html#slices">Сравнение <code>==</code></a> <span class="idx-src">Язык · 5. Массивы и срезы</span></li>
@@ -715,6 +790,7 @@
 <li><a href="./runtime.html#binary">таблицы типов и метаданные</a> <span class="idx-src">Рантайм · 1. Бинарник и рантайм</span></li>
 <li><a href="./http-service.html#errors">таймаут или недоступность зависимости</a> <span class="idx-src">HTTP-сервис · 7. Ошибки как контракт</span></li>
 <li><a href="./stdlib.html#time">таймеры</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
+<li><a href="./architecture.html#errors">текст ошибки — строчными, без точки</a> <span class="idx-src">Архитектура · 6. Ошибки как контракт</span></li>
 <li><a href="./stdlib.html#time">текущее время</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./http-service.html#request">тело</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./stdlib.html#http">тесты</a> <span class="idx-src">Стандартная библиотека · 8. net/http</span></li>
@@ -731,14 +807,17 @@
 <ul class="idx-list">
 <li><a href="./http-service.html#response">файл</a> <span class="idx-src">HTTP-сервис · 6. Response: статус, заголовки, JSON</span></li>
 <li><a href="./stdlib.html#os">файлы</a> <span class="idx-src">Стандартная библиотека · 5. os, os/exec, path/filepath</span></li>
+<li><a href="./architecture.html#goroutines">фоновый воркер</a> <span class="idx-src">Архитектура · 8. Владение горутинами</span></li>
 <li><a href="./http-service.html#request">форма</a> <span class="idx-src">HTTP-сервис · 5. Request: тело, лимиты, контекст</span></li>
 <li><a href="./stdlib.html#time">формат</a> <span class="idx-src">Стандартная библиотека · 6. time</span></li>
 <li><a href="./language.html#import-forms">Формы импорта</a> <span class="idx-src">Язык · 1. Пакеты, файлы, видимость</span></li>
+<li><a href="./architecture.html#deps">функциональные опции</a> <span class="idx-src">Архитектура · 4. Зависимости и DI без фреймворка</span></li>
 <li><a href="./language.html#control">функция-итератор [Go 1.23]</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
 </ul>
 <h3 id="grp-cyr-ch" class="idx-group">Ч</h3>
 <ul class="idx-list">
 <li><a href="./language.html#values">числовые типы</a> <span class="idx-src">Язык · 2. Переменные, константы, zero value</span></li>
+<li><a href="./examples.html#growth">чтение с фильтрами</a> <span class="idx-src">Примеры кода · 9. Что менять при росте</span></li>
 <li><a href="./language.html#range-values">Что даёт range</a> <span class="idx-src">Язык · 12. Замыкания, циклы, switch</span></li>
 </ul>
 <h3 id="grp-cyr-e" class="idx-group">Э</h3>

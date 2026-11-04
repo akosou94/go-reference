@@ -61,9 +61,631 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>Примеры кода — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead">Сервис заявок целиком в файлах: домен и переходы статусов, сервис, адаптер Postgres с optimistic locking, HTTP с DTO и ошибками, сборка в <code>main</code>, тесты и миграция.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Все файлы собраны в один модуль и проверены <code>go build</code>, <code>go vet</code> и <code>go test</code>. Структура и правила — в листе «Архитектура»; здесь те же правила в коде.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#tree">1. Дерево проекта</a></li>
+    <li><a href="#domain">2. Домен: заявка и переходы</a></li>
+    <li><a href="#service">3. Сервис: сценарии</a></li>
+    <li><a href="#repo">4. Postgres: адаптер и optimistic locking</a></li>
+    <li><a href="#http">5. HTTP: DTO и ошибки</a></li>
+    <li><a href="#main">6. Сборка в main</a></li>
+    <li><a href="#tests">7. Тесты</a></li>
+    <li><a href="#migration">8. Миграция</a></li>
+    <li><a href="#growth">9. Что менять при росте</a></li>
+    <li><a href="#sources">10. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="tree">
+  <h2>1. Дерево проекта</h2>
+
+  <pre><code>orders/
+    go.mod
+    cmd/
+        api/
+            main.go
+    internal/
+        order/
+            order.go
+            order_test.go
+            service.go
+            service_test.go
+            postgres/
+                repo.go
+        httpapi/
+            handler.go
+            handler_test.go
+    migrations/
+        001_init.sql</code></pre>
+
+  <p>Зависимости идут в одну сторону: <code>cmd/api</code> знает всех, <code>httpapi</code> знает <code>order</code>, <code>order</code> не знает ни HTTP, ни SQL. <code>order/postgres</code> знает <code>order</code> и <code>database/sql</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Файл</th><th>Ответственность</th></tr></thead>
+      <tbody>
+        <tr><td><code>order/order.go</code></td><td>типы, статусы, ошибки, переходы</td></tr>
+        <tr><td><code>order/service.go</code></td><td>сценарии и интерфейс хранилища</td></tr>
+        <tr><td><code>order/postgres/repo.go</code></td><td>SQL и перевод ошибок базы</td></tr>
+        <tr><td><code>httpapi/handler.go</code></td><td>HTTP, JSON, статусы</td></tr>
+        <tr><td><code>cmd/api/main.go</code></td><td>конфигурация и сборка графа</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="domain">
+  <h2>2. Домен: заявка и переходы</h2>
+
+  <p>Статус — не строка в обработчике, а тип с набором значений. Переход — метод домена: он проверяет предусловие и меняет состояние. Ошибки домена объявлены здесь же, потому что это часть контракта.</p>
+
+  <pre><code>// internal/order/order.go
+package order
+
+import (
+    "errors"
+    "fmt"
+)
+
+type Status string
+
+const (
+    Draft     Status = "draft"
+    Submitted Status = "submitted"
+    Approved  Status = "approved"
+)
+
+type Order struct {
+    ID      int64
+    Version int64
+    Title   string
+    Amount  int64
+    Status  Status
+}
+
+var (
+    ErrNotFound          = errors.New("order not found")
+    ErrConflict          = errors.New("order version conflict")
+    ErrInvalidTransition = errors.New("invalid status transition")
+    ErrEmptyTitle        = errors.New("empty title")
+)
+
+func (o *Order) Submit() error {
+    if o.Status != Draft {
+        return fmt.Errorf("submit from %q: %w", o.Status, ErrInvalidTransition)
+    }
+    o.Status = Submitted
+    return nil
+}
+
+func (o *Order) Approve() error {
+    if o.Status != Submitted {
+        return fmt.Errorf("approve from %q: %w", o.Status, ErrInvalidTransition)
+    }
+    o.Status = Approved
+    return nil
+}</code></pre>
+
+  <p class="is-muted"><code>Version</code> — не бизнес-поле, а средство конкурентного контроля. Домен о нём не рассуждает, но хранилище использует его при записи.</p>
+</section>
+
+<section id="service">
+  <h2>3. Сервис: сценарии</h2>
+
+  <p>Сервис знает, что нужно сделать, но не знает, как это хранится. Интерфейс <code>Repository</code> объявлен здесь — на стороне потребителя, — и описывает только два нужных метода.</p>
+
+  <pre><code>// internal/order/service.go
+package order
+
+import "context"
+
+type Repository interface {
+    Get(ctx context.Context, id int64) (Order, error)
+    Save(ctx context.Context, o Order) error
+}
+
+type Service struct {
+    repo Repository
+}
+
+func NewService(repo Repository) *Service {
+    return &amp;Service{repo: repo}
+}
+
+func (s *Service) Get(ctx context.Context, id int64) (Order, error) {
+    return s.repo.Get(ctx, id)
+}
+
+func (s *Service) Submit(ctx context.Context, id int64) error {
+    o, err := s.repo.Get(ctx, id)
+    if err != nil {
+        return err
+    }
+    if err := o.Submit(); err != nil {
+        return err
+    }
+    return s.repo.Save(ctx, o)
+}
+
+func (s *Service) Approve(ctx context.Context, id int64) error {
+    o, err := s.repo.Get(ctx, id)
+    if err != nil {
+        return err
+    }
+    if err := o.Approve(); err != nil {
+        return err
+    }
+    return s.repo.Save(ctx, o)
+}</code></pre>
+
+  <p>Сценарий «прочитать — изменить — записать» не оборачивается в транзакцию на уровне сервиса: конкурентную запись ловит версия в <code>Save</code>. Если бы правило требовало нескольких записей, транзакция жила бы в адаптере, а не в домене.</p>
+</section>
+
+<section id="repo">
+  <h2>4. Postgres: адаптер и optimistic locking</h2>
+
+  <p>Адаптер переводит строку базы в домен, <code>sql.ErrNoRows</code> — в <code>ErrNotFound</code>, а нулевое число обновлённых строк — в <code>ErrConflict</code>. Условие <code>version = $5</code> не даёт двум читателям записать поверх друг друга.</p>
+
+  <pre><code>// internal/order/postgres/repo.go
+package postgres
+
+import (
+    "context"
+    "database/sql"
+    "errors"
+
+    "example.com/orders/internal/order"
+)
+
+type Repo struct {
+    db *sql.DB
+}
+
+func New(db *sql.DB) *Repo {
+    return &amp;Repo{db: db}
+}
+
+func (r *Repo) Get(ctx context.Context, id int64) (order.Order, error) {
+    var o order.Order
+    err := r.db.QueryRowContext(ctx,
+        `select id, version, title, amount, status from orders where id = $1`, id).
+        Scan(&amp;o.ID, &amp;o.Version, &amp;o.Title, &amp;o.Amount, &amp;o.Status)
+
+    if errors.Is(err, sql.ErrNoRows) {
+        return order.Order{}, order.ErrNotFound
+    }
+    return o, err
+}
+
+func (r *Repo) Save(ctx context.Context, o order.Order) error {
+    tag, err := r.db.ExecContext(ctx,
+        `update orders
+            set title = $1, amount = $2, status = $3, version = version + 1
+          where id = $4 and version = $5`,
+        o.Title, o.Amount, o.Status, o.ID, o.Version)
+    if err != nil {
+        return err
+    }
+
+    n, err := tag.RowsAffected()
+    if err != nil {
+        return err
+    }
+    if n == 0 {
+        return order.ErrConflict
+    }
+    return nil
+}</code></pre>
+
+  <p class="is-muted">Ошибки драйвера возвращаются как есть: сервис и транспорт не должны знать про <code>pgconn.PgError</code>. Если нужен SQLSTATE, его разбирают здесь и переводят в ошибку домена.</p>
+</section>
+
+<section id="http">
+  <h2>5. HTTP: DTO и ошибки</h2>
+
+  <p>Транспорт не отдаёт доменный тип наружу: DTO фиксирует JSON-контракт. Ошибки домена переводятся в статусы в одном месте, <code>fail</code>; внутренние ошибки логируются и наружу уходят как <code>internal</code>.</p>
+
+  <pre><code>// internal/httpapi/handler.go
+package httpapi
+
+import (
+    "context"
+    "encoding/json"
+    "errors"
+    "log/slog"
+    "net/http"
+    "strconv"
+
+    "example.com/orders/internal/order"
+)
+
+type Handler struct {
+    orders *order.Service
+}
+
+func NewHandler(orders *order.Service) *Handler {
+    return &amp;Handler{orders: orders}
+}
+
+type orderDTO struct {
+    ID      int64  `json:"id"`
+    Title   string `json:"title"`
+    Amount  int64  `json:"amount"`
+    Status  string `json:"status"`
+    Version int64  `json:"version"`
+}
+
+func toDTO(o order.Order) orderDTO {
+    return orderDTO{
+        ID:      o.ID,
+        Title:   o.Title,
+        Amount:  o.Amount,
+        Status:  string(o.Status),
+        Version: o.Version,
+    }
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+    w.Header().Set("Content-Type", "application/json; charset=utf-8")
+    w.WriteHeader(status)
+    _ = json.NewEncoder(w).Encode(v)
+}
+
+func writeError(w http.ResponseWriter, status int, code, msg string) {
+    writeJSON(w, status, map[string]string{"code": code, "message": msg})
+}
+
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+    if err != nil {
+        writeError(w, http.StatusBadRequest, "invalid_id", "id must be an integer")
+        return
+    }
+
+    o, err := h.orders.Get(r.Context(), id)
+    if err != nil {
+        h.fail(w, err)
+        return
+    }
+    writeJSON(w, http.StatusOK, toDTO(o))
+}
+
+func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
+    h.transition(w, r, h.orders.Submit)
+}
+
+func (h *Handler) Approve(w http.ResponseWriter, r *http.Request) {
+    h.transition(w, r, h.orders.Approve)
+}
+
+func (h *Handler) transition(
+    w http.ResponseWriter,
+    r *http.Request,
+    action func(ctx context.Context, id int64) error,
+) {
+    id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+    if err != nil {
+        writeError(w, http.StatusBadRequest, "invalid_id", "id must be an integer")
+        return
+    }
+
+    if err := action(r.Context(), id); err != nil {
+        h.fail(w, err)
+        return
+    }
+    w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) fail(w http.ResponseWriter, err error) {
+    switch {
+    case errors.Is(err, order.ErrNotFound):
+        writeError(w, http.StatusNotFound, "not_found", "order not found")
+    case errors.Is(err, order.ErrConflict):
+        writeError(w, http.StatusConflict, "conflict", "order was changed")
+    case errors.Is(err, order.ErrInvalidTransition):
+        writeError(w, http.StatusUnprocessableEntity, "invalid_transition", "transition not allowed")
+    default:
+        slog.Error("order request", "err", err)
+        writeError(w, http.StatusInternalServerError, "internal", "internal error")
+    }
+}</code></pre>
+</section>
+
+<section id="main">
+  <h2>6. Сборка в main</h2>
+
+  <p><code>main</code> — единственное место, где виден весь граф: база, репозиторий, сервис, обработчик, маршруты, сервер. Здесь же конфигурация, сигнал и graceful shutdown.</p>
+
+  <pre><code>// cmd/api/main.go
+package main
+
+import (
+    "context"
+    "database/sql"
+    "errors"
+    "log"
+    "net/http"
+    "os"
+    "os/signal"
+    "syscall"
+    "time"
+
+    _ "github.com/jackc/pgx/v5/stdlib"
+
+    "example.com/orders/internal/httpapi"
+    "example.com/orders/internal/order"
+    "example.com/orders/internal/order/postgres"
+)
+
+type Config struct {
+    Addr            string
+    DatabaseURL     string
+    ShutdownTimeout time.Duration
+}
+
+func Load() (Config, error) {
+    cfg := Config{
+        Addr:            envOr("ADDR", ":8080"),
+        DatabaseURL:     os.Getenv("DATABASE_URL"),
+        ShutdownTimeout: 10 * time.Second,
+    }
+    if cfg.DatabaseURL == "" {
+        return Config{}, errors.New("DATABASE_URL is required")
+    }
+    return cfg, nil
+}
+
+func envOr(key, fallback string) string {
+    if v := os.Getenv(key); v != "" {
+        return v
+    }
+    return fallback
+}
+
+func main() {
+    ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+    defer stop()
+
+    if err := run(ctx); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func run(ctx context.Context) error {
+    cfg, err := Load()
+    if err != nil {
+        return err
+    }
+
+    db, err := sql.Open("pgx", cfg.DatabaseURL)
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    return serve(ctx, cfg, db)
+}
+
+func serve(ctx context.Context, cfg Config, db *sql.DB) error {
+    repo := postgres.New(db)
+    svc := order.NewService(repo)
+    api := httpapi.NewHandler(svc)
+
+    mux := http.NewServeMux()
+    mux.HandleFunc("GET /orders/{id}", api.Get)
+    mux.HandleFunc("POST /orders/{id}/submit", api.Submit)
+    mux.HandleFunc("POST /orders/{id}/approve", api.Approve)
+
+    srv := &amp;http.Server{
+        Addr:              cfg.Addr,
+        Handler:           mux,
+        ReadHeaderTimeout: 5 * time.Second,
+    }
+
+    go func() { _ = srv.ListenAndServe() }()
+    &lt;-ctx.Done()
+
+    shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
+    defer cancel()
+    return srv.Shutdown(shutdownCtx)
+}</code></pre>
+
+  <p class="is-muted"><code>sql.Open</code> не проверяет соединение. Если нужен ранний отказ, добавьте <code>db.PingContext(ctx)</code> в <code>run</code> — до запуска сервера.</p>
+</section>
+
+<section id="tests">
+  <h2>7. Тесты</h2>
+
+  <p>Три уровня: домен без зависимостей, сервис с фейковым хранилищем, HTTP через <code>ServeMux</code> и <code>httptest</code>. SQL-адаптер проверяется отдельно на настоящем Postgres.</p>
+
+  <h3 id="test-domain">Домен</h3>
+  <pre><code>// internal/order/order_test.go
+package order
+
+import (
+    "errors"
+    "testing"
+)
+
+func TestTransitions(t *testing.T) {
+    tests := []struct {
+        name    string
+        start   Status
+        action  func(*Order) error
+        want    Status
+        wantErr bool
+    }{
+        {"submit draft", Draft, (*Order).Submit, Submitted, false},
+        {"submit submitted", Submitted, (*Order).Submit, Submitted, true},
+        {"approve submitted", Submitted, (*Order).Approve, Approved, false},
+        {"approve draft", Draft, (*Order).Approve, Draft, true},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            o := Order{Status: tt.start}
+            err := tt.action(&amp;o)
+
+            if (err != nil) != tt.wantErr {
+                t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
+            }
+            if tt.wantErr &amp;&amp; !errors.Is(err, ErrInvalidTransition) {
+                t.Fatalf("err = %v, want ErrInvalidTransition", err)
+            }
+            if o.Status != tt.want {
+                t.Fatalf("status = %q, want %q", o.Status, tt.want)
+            }
+        })
+    }
+}</code></pre>
+
+  <h3 id="test-service">Сервис с фейком</h3>
+  <pre><code>// internal/order/service_test.go
+package order
+
+import (
+    "context"
+    "testing"
+)
+
+type fakeRepo struct {
+    o Order
+}
+
+func (f *fakeRepo) Get(ctx context.Context, id int64) (Order, error) {
+    return f.o, nil
+}
+
+func (f *fakeRepo) Save(ctx context.Context, o Order) error {
+    f.o = o
+    return nil
+}
+
+func TestServiceSubmit(t *testing.T) {
+    repo := &amp;fakeRepo{o: Order{ID: 1, Status: Draft}}
+    svc := NewService(repo)
+
+    if err := svc.Submit(context.Background(), 1); err != nil {
+        t.Fatal(err)
+    }
+    if repo.o.Status != Submitted {
+        t.Fatalf("status = %q, want %q", repo.o.Status, Submitted)
+    }
+}</code></pre>
+
+  <h3 id="test-http">HTTP</h3>
+  <pre><code>// internal/httpapi/handler_test.go
+package httpapi
+
+import (
+    "context"
+    "net/http"
+    "net/http/httptest"
+    "testing"
+
+    "example.com/orders/internal/order"
+)
+
+type stubRepo struct {
+    o order.Order
+}
+
+func (s *stubRepo) Get(ctx context.Context, id int64) (order.Order, error) {
+    return s.o, nil
+}
+
+func (s *stubRepo) Save(ctx context.Context, o order.Order) error {
+    s.o = o
+    return nil
+}
+
+func TestSubmit(t *testing.T) {
+    repo := &amp;stubRepo{o: order.Order{ID: 1, Status: order.Draft}}
+    h := NewHandler(order.NewService(repo))
+
+    mux := http.NewServeMux()
+    mux.HandleFunc("POST /orders/{id}/submit", h.Submit)
+
+    req := httptest.NewRequest(http.MethodPost, "/orders/1/submit", nil)
+    rec := httptest.NewRecorder()
+    mux.ServeHTTP(rec, req)
+
+    if rec.Code != http.StatusNoContent {
+        t.Fatalf("code = %d, body = %s", rec.Code, rec.Body)
+    }
+    if repo.o.Status != order.Submitted {
+        t.Fatalf("status = %q", repo.o.Status)
+    }
+}</code></pre>
+
+  <p class="is-muted">Фейк проверяет сценарий, но не SQL. Адаптер тестируют на реальной базе: транзакция на тест с откатом, см. лист «SQL и Postgres».</p>
+</section>
+
+<section id="migration">
+  <h2>8. Миграция</h2>
+
+  <p>Схема повторяет домен, но не диктует его: <code>status</code> ограничен <code>check</code>, <code>version</code> хранит конкурентный контроль, <code>amount</code> неотрицателен.</p>
+
+  <pre><code>-- migrations/001_init.sql
+create table orders (
+    id         bigint generated always as identity primary key,
+    version    bigint not null default 1,
+    title      text not null,
+    amount     bigint not null check (amount &gt;= 0),
+    status     text not null check (status in ('draft', 'submitted', 'approved')),
+    created_at timestamptz not null default now()
+);
+
+create index orders_status_idx on orders (status);</code></pre>
+
+  <p>Ограничения в базе дублируют правила домена намеренно: домен защищает от неверного сценария, база — от неверной записи любым путём.</p>
+</section>
+
+<section id="growth">
+  <h2>9. Что менять при росте</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Появляется</th><th>Что менять</th></tr></thead>
+      <tbody>
+        <tr><td>второй транспорт (gRPC)</td><td>новый пакет рядом с <code>httpapi</code>; домен и сервис не трогаются</td></tr>
+        <tr><td>второе хранилище</td><td>новый адаптер, реализующий <code>order.Repository</code></td></tr>
+        <tr><td>события при смене статуса</td><td>интерфейс публикации в сервисе или outbox в адаптере</td></tr>
+        <tr><td>аутентификация</td><td>middleware в транспорте; домен получает уже проверенного субъекта</td></tr>
+        <tr><td>несколько шагов в одной транзакции</td><td>транзакция в адаптере, сервис принимает <code>Repository</code> с нужным контрактом</td></tr>
+        <tr><td>чтение с фильтрами</td><td>отдельный read-метод или read-модель, не расширение домена</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">Рост не повод сразу вводить фреймворк DI, CQRS и микросервисы. Сначала появляется второй потребитель или второе хранилище — тогда и выделяется шов.</p>
+</section>
+
+<section id="sources">
+  <h2>10. Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/doc/modules/layout">Organizing a Go module</a> — <code>cmd</code>, <code>internal</code>, серверный проект</li>
+    <li><a href="https://go.dev/wiki/CodeReviewComments">Go Code Review Comments</a> — интерфейсы, ошибки, синхронные функции</li>
+    <li><a href="https://pkg.go.dev/net/http">pkg.go.dev/net/http</a> — <code>ServeMux</code>, <code>PathValue</code>, <code>Server</code></li>
+    <li><a href="https://pkg.go.dev/net/http/httptest">pkg.go.dev/net/http/httptest</a> — тесты транспорта</li>
+    <li><a href="https://pkg.go.dev/database/sql">pkg.go.dev/database/sql</a> — <code>RowsAffected</code>, <code>ErrNoRows</code></li>
+    <li><a href="https://www.postgresql.org/docs/current/ddl-constraints.html">PostgreSQL: Constraints</a> — <code>check</code> и <code>not null</code></li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
