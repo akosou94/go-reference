@@ -61,9 +61,457 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>HTTP-сервис — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead">Запрос от сокета до ответа: сервер и таймауты, <code>ServeMux</code>, middleware, лимиты тела, ошибки как контракт, graceful shutdown, клиент, наблюдаемость и тесты.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из документации <a href="https://pkg.go.dev/net/http">net/http</a>, release notes Go 1.22–1.27 и статей <a href="https://go.dev/blog/context">Go Concurrency Patterns: Context</a> и <a href="https://go.dev/blog/error-handling-and-go">Error handling and Go</a>. Примеры проверены <code>go build</code>, <code>go vet</code> и <code>httptest</code>.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#path">1. Карта запроса</a></li>
+    <li><a href="#server">2. Server и таймауты</a></li>
+    <li><a href="#mux">3. ServeMux и маршруты</a></li>
+    <li><a href="#middleware">4. Handler и middleware</a></li>
+    <li><a href="#request">5. Request: тело, лимиты, контекст</a></li>
+    <li><a href="#response">6. Response: статус, заголовки, JSON</a></li>
+    <li><a href="#errors">7. Ошибки как контракт</a></li>
+    <li><a href="#shutdown">8. Graceful shutdown</a></li>
+    <li><a href="#client">9. Клиент</a></li>
+    <li><a href="#observability">10. Наблюдаемость</a></li>
+    <li><a href="#testing">11. Тестирование</a></li>
+    <li><a href="#sources">12. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="path">
+  <h2>1. Карта запроса</h2>
+
+  <p><code>net/http</code> принимает соединение, читает запрос, выбирает обработчик по <code>ServeMux</code> и вызывает <code>ServeHTTP</code>. Обработчик получает <code>ResponseWriter</code> и <code>*Request</code>; ответ уходит по тому же соединению, если клиент его не закрыл.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Шаг</th><th>Кто отвечает</th><th>Что происходит</th></tr></thead>
+      <tbody>
+        <tr><td>1. Соединение</td><td><code>Server</code></td><td>принимает TCP, читает заголовки с ограничением</td></tr>
+        <tr><td>2. Маршрут</td><td><code>ServeMux</code></td><td>сопоставляет метод и путь с шаблоном</td></tr>
+        <tr><td>3. Middleware</td><td>обёртки <code>http.Handler</code></td><td>лог, восстановление после паники, request ID, аутентификация</td></tr>
+        <tr><td>4. Handler</td><td>ваш код</td><td>читает тело, вызывает сервис, пишет ответ</td></tr>
+        <tr><td>5. Сервис</td><td>домен</td><td>правила, транзакции, обращения к хранилищу</td></tr>
+        <tr><td>6. Ответ</td><td><code>ResponseWriter</code></td><td>заголовки, статус, тело</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">Порядок middleware — порядок обёрток: внешняя видит запрос первой, а ответ последней. Восстановление после паники ставят снаружи, чтобы поймать панику любого внутреннего слоя.</p>
+</section>
+
+<section id="server">
+  <h2>2. Server и таймауты</h2>
+
+  <p>Нулевой таймаут означает «без ограничения». Это удобно для локальной разработки и опасно в production: медленный клиент держит соединение и горутину сколько угодно.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Поле</th><th>Что ограничивает</th><th>Ноль</th></tr></thead>
+      <tbody>
+        <tr><td><code>ReadHeaderTimeout</code></td><td>чтение заголовков запроса</td><td>берётся <code>ReadTimeout</code></td></tr>
+        <tr><td><code>ReadTimeout</code></td><td>чтение всего запроса, включая тело</td><td>без ограничения</td></tr>
+        <tr><td><code>WriteTimeout</code></td><td>запись ответа</td><td>без ограничения</td></tr>
+        <tr><td><code>IdleTimeout</code></td><td>простой keep-alive соединения</td><td>берётся <code>ReadTimeout</code></td></tr>
+        <tr><td><code>MaxHeaderBytes</code></td><td>размер заголовков</td><td><code>DefaultMaxHeaderBytes</code> = 1 МиБ</td></tr>
+        <tr><td><code>BaseContext</code></td><td>корневой контекст всех запросов</td><td><code>context.Background()</code></td></tr>
+        <tr><td><code>ConnContext</code></td><td>контекст отдельного соединения</td><td>без изменений</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>srv := &amp;http.Server{
+    Addr:              ":8080",
+    Handler:           api.Routes(),
+    ReadHeaderTimeout: 5 * time.Second,
+    ReadTimeout:       15 * time.Second,
+    WriteTimeout:      30 * time.Second,
+    IdleTimeout:       60 * time.Second,
+    MaxHeaderBytes:    1 &lt;&lt; 20,
+}</code></pre>
+
+  <p><code>ReadHeaderTimeout</code> защищает от медленных заголовков (Slowloris), <code>ReadTimeout</code> — от медленного тела, <code>WriteTimeout</code> — от медленного читателя. Для отдельного обработчика дедлайн можно поменять через <code>http.NewResponseController</code> [1.20].</p>
+
+  <pre><code>rc := http.NewResponseController(w)
+_ = rc.SetWriteDeadline(time.Now().Add(2 * time.Minute))
+io.Copy(w, bigFile)</code></pre>
+</section>
+
+<section id="mux">
+  <h2>3. ServeMux и маршруты</h2>
+
+  <p>С Go 1.22 шаблон <code>ServeMux</code> может содержать метод и подстановки. Метод указывается первым словом; шаблон с методом приоритетнее такого же без метода. Регистрация <code>GET</code> автоматически покрывает <code>HEAD</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Шаблон</th><th>Что совпадает</th></tr></thead>
+      <tbody>
+        <tr><td><code>/users</code></td><td>точный путь <code>/users</code></td></tr>
+        <tr><td><code>/users/</code></td><td>поддерево: <code>/users</code>, <code>/users/1</code>, <code>/users/1/posts</code></td></tr>
+        <tr><td><code>GET /users/{id}</code></td><td>один сегмент; значение — <code>r.PathValue("id")</code></td></tr>
+        <tr><td><code>GET /files/{path...}</code></td><td>остаток пути, включая слэши</td></tr>
+        <tr><td><code>GET /users/{$}</code></td><td>только точный <code>/users</code>, без поддерева</td></tr>
+        <tr><td><code>example.com/</code></td><td>запросы к указанному хосту</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>mux := http.NewServeMux()
+mux.HandleFunc("GET /users/{id}", a.getUser)
+mux.HandleFunc("POST /users", a.createUser)
+mux.HandleFunc("GET /files/{path...}", a.getFile)
+
+func (a *API) getUser(w http.ResponseWriter, r *http.Request) {
+    id := r.PathValue("id")
+    // ...
+}</code></pre>
+
+  <p>Если два шаблона пересекаются, выигрывает более конкретный: метод важнее его отсутствия, литеральный сегмент важнее подстановки, более длинный путь важнее короткого. Конфликтующие шаблоны <code>ServeMux</code> паникует при регистрации. С Go 1.23 сработавший шаблон доступен в <code>r.Pattern</code>.</p>
+</section>
+
+<section id="middleware">
+  <h2>4. Handler и middleware</h2>
+
+  <p><code>http.Handler</code> — интерфейс с одним методом <code>ServeHTTP(w, r)</code>. <code>http.HandlerFunc</code> превращает функцию в обработчик. Middleware — функция, которая принимает и возвращает <code>http.Handler</code>.</p>
+
+  <pre><code>func logger(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        next.ServeHTTP(w, r)
+        slog.Info("request",
+            "method", r.Method,
+            "path", r.URL.Path,
+            "dur", time.Since(start),
+        )
+    })
+}
+
+func recoverer(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        defer func() {
+            if v := recover(); v != nil {
+                slog.Error("panic", "value", v, "path", r.URL.Path)
+                writeError(w, http.StatusInternalServerError, "internal", "internal error")
+            }
+        }()
+        next.ServeHTTP(w, r)
+    })
+}
+
+handler := recoverer(logger(mux))</code></pre>
+
+  <p class="is-muted">Если ответ уже начат, <code>writeError</code> из <code>recover</code> не сможет поменять статус: заголовки ушли. Поэтому панику лучше не доводить до записи ответа, а восстановление всё равно оставить последней линией.</p>
+</section>
+
+<section id="request">
+  <h2>5. Request: тело, лимиты, контекст</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Что нужно</th><th>API</th></tr></thead>
+      <tbody>
+        <tr><td>тело</td><td><code>r.Body</code>, <code>json.NewDecoder</code>, <code>io.ReadAll</code></td></tr>
+        <tr><td>ограничить тело</td><td><code>http.MaxBytesReader(w, r.Body, n)</code></td></tr>
+        <tr><td>query-параметры</td><td><code>r.URL.Query()</code>, <code>r.URL.Query().Get("q")</code></td></tr>
+        <tr><td>форма</td><td><code>r.ParseForm()</code>, <code>r.FormValue</code>, <code>r.PostFormValue</code></td></tr>
+        <tr><td>заголовки</td><td><code>r.Header.Get</code>, <code>r.UserAgent</code>, <code>r.Host</code></td></tr>
+        <tr><td>контекст</td><td><code>r.Context()</code></td></tr>
+        <tr><td>подстановка пути</td><td><code>r.PathValue("id")</code></td></tr>
+        <tr><td>отмена клиентом</td><td><code>&lt;-r.Context().Done()</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>func (a *API) createUser(w http.ResponseWriter, r *http.Request) {
+    r.Body = http.MaxBytesReader(w, r.Body, 1 &lt;&lt; 20)
+
+    dec := json.NewDecoder(r.Body)
+    dec.DisallowUnknownFields()
+
+    var req User
+    if err := dec.Decode(&amp;req); err != nil {
+        writeError(w, http.StatusBadRequest, "invalid_json", "invalid request body")
+        return
+    }
+
+    writeJSON(w, http.StatusCreated, req)
+}</code></pre>
+
+  <p>Контекст запроса отменяется, когда клиент закрыл соединение, отменил запрос или обработчик вернулся. Всё, что делает handler, должно принимать <code>ctx</code> и проверять отмену: запросы к базе, HTTP-вызовы, тяжёлые циклы.</p>
+
+  <pre><code>ctx := r.Context()
+
+select {
+case &lt;-ctx.Done():
+    return ctx.Err()
+case result := &lt;-work:
+    writeJSON(w, http.StatusOK, result)
+}</code></pre>
+</section>
+
+<section id="response">
+  <h2>6. Response: статус, заголовки, JSON</h2>
+
+  <p><code>ResponseWriter</code> имеет три метода: <code>Header()</code>, <code>Write([]byte)</code>, <code>WriteHeader(status)</code>. Заголовки нужно установить до <code>WriteHeader</code>; первый <code>Write</code> без явного статуса отправляет <code>200 OK</code>. Повторный <code>WriteHeader</code> игнорируется с предупреждением.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Задача</th><th>Как</th></tr></thead>
+      <tbody>
+        <tr><td>JSON-ответ</td><td><code>Content-Type: application/json; charset=utf-8</code>, затем <code>json.NewEncoder(w).Encode</code></td></tr>
+        <tr><td>ошибка</td><td><code>http.Error(w, msg, code)</code> — текст и <code>X-Content-Type-Options: nosniff</code></td></tr>
+        <tr><td>редирект</td><td><code>http.Redirect(w, r, url, code)</code></td></tr>
+        <tr><td>файл</td><td><code>http.ServeFile</code>, <code>http.FileServer</code></td></tr>
+        <tr><td>поток</td><td><code>http.Flusher</code>, <code>http.NewResponseController(w).Flush()</code></td></tr>
+        <tr><td>заголовки безопасности</td><td><code>X-Content-Type-Options</code>, <code>Content-Security-Policy</code>, <code>Strict-Transport-Security</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>func writeJSON(w http.ResponseWriter, status int, v any) {
+    w.Header().Set("Content-Type", "application/json; charset=utf-8")
+    w.WriteHeader(status)
+    _ = json.NewEncoder(w).Encode(v)
+}</code></pre>
+
+  <p class="is-muted">Если <code>Encode</code> вернул ошибку, статус уже отправлен: поменять его нельзя. Для ответов, которые могут не сериализоваться, сначала кодируют в буфер, затем пишут статус и тело.</p>
+</section>
+
+<section id="errors">
+  <h2>7. Ошибки как контракт</h2>
+
+  <p>HTTP-ответ должен быть предсказуемым: одинаковый JSON для ошибок, стабильные коды, понятное сообщение. Внутренние детали — текст ошибки базы, стек, имена таблиц — наружу не отдают; их пишут в лог вместе с request ID.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Домен</th><th>HTTP-статус</th><th>Код в теле</th></tr></thead>
+      <tbody>
+        <tr><td>неверный ввод</td><td><code>400 Bad Request</code></td><td><code>invalid_argument</code></td></tr>
+        <tr><td>не аутентифицирован</td><td><code>401 Unauthorized</code></td><td><code>unauthenticated</code></td></tr>
+        <tr><td>нет прав</td><td><code>403 Forbidden</code></td><td><code>permission_denied</code></td></tr>
+        <tr><td>не найдено</td><td><code>404 Not Found</code></td><td><code>not_found</code></td></tr>
+        <tr><td>конфликт версий или уникальности</td><td><code>409 Conflict</code></td><td><code>conflict</code></td></tr>
+        <tr><td>нарушено правило домена</td><td><code>422 Unprocessable Entity</code></td><td><code>failed_precondition</code></td></tr>
+        <tr><td>слишком много запросов</td><td><code>429 Too Many Requests</code></td><td><code>resource_exhausted</code></td></tr>
+        <tr><td>внутренняя ошибка</td><td><code>500 Internal Server Error</code></td><td><code>internal</code></td></tr>
+        <tr><td>таймаут или недоступность зависимости</td><td><code>503 Service Unavailable</code></td><td><code>unavailable</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>type errorBody struct {
+    Code    string `json:"code"`
+    Message string `json:"message"`
+}
+
+func writeError(w http.ResponseWriter, status int, code, msg string) {
+    writeJSON(w, status, errorBody{Code: code, Message: msg})
+}
+
+func (a *API) getUser(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.PathValue("id"))
+    if err != nil {
+        writeError(w, http.StatusBadRequest, "invalid_id", "id must be an integer")
+        return
+    }
+
+    u, err := a.svc.Get(r.Context(), id)
+    if errors.Is(err, ErrNotFound) {
+        writeError(w, http.StatusNotFound, "not_found", "user not found")
+        return
+    }
+    if err != nil {
+        slog.Error("get user", "err", err, "id", id)
+        writeError(w, http.StatusInternalServerError, "internal", "internal error")
+        return
+    }
+    writeJSON(w, http.StatusOK, u)
+}</code></pre>
+
+  <p class="is-muted">Отображение «ошибка домена → статус» держат в одном месте, рядом с обработчиком. Если каждая ручка придумывает статусы сама, клиент перестаёт понимать API.</p>
+</section>
+
+<section id="shutdown">
+  <h2>8. Graceful shutdown</h2>
+
+  <p><code>Server.Shutdown</code> закрывает слушатель, перестаёт принимать новые соединения и ждёт, пока активные запросы завершатся. <code>ListenAndServe</code> после этого возвращает <code>http.ErrServerClosed</code> — это штатное завершение, а не ошибка.</p>
+
+  <pre><code>func run(ctx context.Context) error {
+    srv := &amp;http.Server{
+        Addr:              ":8080",
+        Handler:           api.Routes(),
+        ReadHeaderTimeout: 5 * time.Second,
+    }
+
+    errCh := make(chan error, 1)
+    go func() {
+        errCh &lt;- srv.ListenAndServe()
+    }()
+
+    select {
+    case err := &lt;-errCh:
+        if errors.Is(err, http.ErrServerClosed) {
+            return nil
+        }
+        return err
+    case &lt;-ctx.Done():
+    }
+
+    shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    return srv.Shutdown(shutdownCtx)
+}</code></pre>
+
+  <pre><code>ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+defer stop()
+
+if err := run(ctx); err != nil {
+    log.Fatal(err)
+}</code></pre>
+
+  <p class="is-muted"><code>Shutdown</code> не ждёт соединений, которые обработчик забрал через <code>Hijacker</code> (WebSocket, свой протокол): их закрывает приложение. Контекст самого сервера отменяется только после возврата из <code>Shutdown</code>.</p>
+</section>
+
+<section id="client">
+  <h2>9. Клиент</h2>
+
+  <p><code>http.Client</code> переиспользует соединения через <code>Transport</code>. Создавать новый клиент на каждый запрос бессмысленно: каждый получит свой пул соединений. <code>Client.Timeout</code> покрывает весь запрос: соединение, редиректы и чтение тела.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Настройка</th><th>По умолчанию</th><th>Зачем менять</th></tr></thead>
+      <tbody>
+        <tr><td><code>Client.Timeout</code></td><td>0 — без ограничения</td><td>жёсткий предел на весь запрос</td></tr>
+        <tr><td><code>Transport.MaxIdleConns</code></td><td>100</td><td>размер общего пула</td></tr>
+        <tr><td><code>Transport.MaxIdleConnsPerHost</code></td><td>2</td><td>параллелизм к одному хосту</td></tr>
+        <tr><td><code>Transport.IdleConnTimeout</code></td><td>90 с</td><td>время жизни простаивающего соединения</td></tr>
+        <tr><td><code>Transport.TLSHandshakeTimeout</code></td><td>10 с</td><td>медленное TLS-рукопожатие</td></tr>
+        <tr><td><code>Transport.ResponseHeaderTimeout</code></td><td>0</td><td>ожидание заголовков ответа</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>client := &amp;http.Client{
+    Timeout: 5 * time.Second,
+    Transport: &amp;http.Transport{
+        MaxIdleConns:        100,
+        MaxIdleConnsPerHost: 10,
+        IdleConnTimeout:     90 * time.Second,
+    },
+}
+
+req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+if err != nil {
+    return err
+}
+
+resp, err := client.Do(req)
+if err != nil {
+    return err
+}
+defer resp.Body.Close()</code></pre>
+
+  <p>Тело ответа нужно закрывать всегда, иначе соединение не вернётся в пул. Для повторных попыток запрос должен быть идемпотентным, а тело — воспроизводимым: <code>Transport</code> повторяет только те запросы, которые можно повторить безопасно.</p>
+</section>
+
+<section id="observability">
+  <h2>10. Наблюдаемость</h2>
+
+  <p>Минимум: идентификатор запроса, структурный лог, метрики по коду ответа и длительности. Request ID кладут в контекст и в заголовок ответа, чтобы клиент мог назвать его в поддержке.</p>
+
+  <pre><code>type ctxKey string
+
+const requestIDKey ctxKey = "request_id"
+
+func withRequestID(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        id := r.Header.Get("X-Request-ID")
+        if id == "" {
+            id = newID()
+        }
+        ctx := context.WithValue(r.Context(), requestIDKey, id)
+        w.Header().Set("X-Request-ID", id)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}</code></pre>
+
+  <p>Логи — через <code>log/slog</code>, с полями <code>method</code>, <code>path</code>, <code>status</code>, <code>dur</code>, <code>request_id</code>. Метрики — счётчик запросов и гистограмма длительности по маршруту и статусу; маршрут берут из <code>r.Pattern</code>, а не из сырого пути, иначе кардинальность взорвётся на <code>/users/1</code>, <code>/users/2</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Сигнал</th><th>Что отвечает</th></tr></thead>
+      <tbody>
+        <tr><td>лог запроса</td><td>что именно произошло с конкретным запросом</td></tr>
+        <tr><td>метрика <code>http_requests_total</code></td><td>сколько запросов и с какими статусами</td></tr>
+        <tr><td>гистограмма <code>http_request_duration_seconds</code></td><td>распределение задержек, p95 и p99</td></tr>
+        <tr><td>трассировка</td><td>где именно ушло время между сервисами</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="testing">
+  <h2>11. Тестирование</h2>
+
+  <p><code>httptest.NewRecorder</code> проверяет обработчик без сети: запрос и ответ живут в памяти. <code>httptest.NewServer</code> поднимает настоящий сервер на случайном порту — нужен, когда проверяется клиент, middleware или поведение соединения.</p>
+
+  <pre><code>func TestGetUser(t *testing.T) {
+    api := &amp;API{svc: &amp;Service{}}
+    srv := httptest.NewServer(api.Routes())
+    defer srv.Close()
+
+    resp, err := srv.Client().Get(srv.URL + "/users/1")
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        t.Fatalf("status = %d", resp.StatusCode)
+    }
+}</code></pre>
+
+  <p>Для табличных тестов обработчика:</p>
+
+  <pre><code>req := httptest.NewRequest(http.MethodGet, "/users/abc", nil)
+rec := httptest.NewRecorder()
+
+api.Routes().ServeHTTP(rec, req)
+
+if rec.Code != http.StatusBadRequest {
+    t.Fatalf("code = %d, body = %s", rec.Code, rec.Body)
+}</code></pre>
+
+  <p class="is-muted"><code>httptest.NewRequest</code> не запускает сеть и не требует порта; <code>httptest.NewServer</code> нужно закрывать через <code>defer</code>, иначе тест оставит слушатель.</p>
+</section>
+
+<section id="sources">
+  <h2>12. Первоисточники</h2>
+  <ul>
+    <li><a href="https://pkg.go.dev/net/http">pkg.go.dev/net/http</a> — <code>Server</code>, <code>Client</code>, <code>ServeMux</code>, <code>Request</code>, <code>ResponseWriter</code></li>
+    <li><a href="https://pkg.go.dev/net/http/httptest">pkg.go.dev/net/http/httptest</a> — <code>NewServer</code>, <code>NewRecorder</code>, <code>NewRequest</code></li>
+    <li><a href="https://go.dev/blog/context">Go Concurrency Patterns: Context</a> — контекст в сервере и клиенте</li>
+    <li><a href="https://go.dev/blog/error-handling-and-go">Error handling and Go</a> — ошибки как значения</li>
+    <li><a href="https://go.dev/doc/go1.20">Release notes Go 1.20</a> — <code>http.NewResponseController</code></li>
+    <li><a href="https://go.dev/doc/go1.22">Release notes Go 1.22</a> — методы и подстановки в шаблонах <code>ServeMux</code></li>
+    <li><a href="https://go.dev/doc/go1.23">Release notes Go 1.23</a> — <code>Request.Pattern</code></li>
+    <li><a href="https://go.dev/doc/go1.25">Release notes Go 1.25</a> — <code>http.CrossOriginProtection</code></li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
