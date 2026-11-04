@@ -61,9 +61,518 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>Стандартная библиотека — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead">Обзор API по пакетам: <code>strings</code>, <code>bytes</code>, <code>strconv</code>, <code>fmt</code>, <code>io</code>, <code>os</code>, <code>time</code>, <code>encoding/json</code>, <code>net/http</code>, <code>log/slog</code>, <code>slices</code>, <code>maps</code>, <code>embed</code>.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из документации пакетов на <a href="https://pkg.go.dev/">pkg.go.dev</a> и release notes Go 1.20–1.27. Версия — <strong>Go 1.27</strong>. Лист даёт карту API; устройство сервиса — в «HTTP-сервисе», работа с базой — в «SQL и Postgres».</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#strings">1. strings и bytes</a></li>
+    <li><a href="#strconv">2. strconv</a></li>
+    <li><a href="#fmt">3. fmt</a></li>
+    <li><a href="#io">4. io, io/fs, bufio</a></li>
+    <li><a href="#os">5. os, os/exec, path/filepath</a></li>
+    <li><a href="#time">6. time</a></li>
+    <li><a href="#json">7. encoding/json</a></li>
+    <li><a href="#http">8. net/http</a></li>
+    <li><a href="#slog">9. log/slog</a></li>
+    <li><a href="#collections">10. slices, maps, cmp, sort</a></li>
+    <li><a href="#embed">11. embed</a></li>
+    <li><a href="#sources">12. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="strings">
+  <h2>1. strings и bytes</h2>
+
+  <p>Пакеты <code>strings</code> и <code>bytes</code> повторяют друг друга: первый работает со строками, второй — с <code>[]byte</code>. Строки неизменяемы, поэтому функции возвращают новые значения; <code>bytes</code> дополнительно даёт буфер, который можно менять.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Задача</th><th>Функции</th></tr></thead>
+      <tbody>
+        <tr><td>поиск</td><td><code>Contains</code>, <code>ContainsAny</code>, <code>ContainsRune</code>, <code>ContainsFunc</code>, <code>Count</code>, <code>Index</code>, <code>IndexAny</code>, <code>IndexByte</code>, <code>IndexFunc</code>, <code>IndexRune</code>, <code>LastIndex</code>, <code>LastIndexAny</code>, <code>LastIndexByte</code>, <code>LastIndexFunc</code></td></tr>
+        <tr><td>префикс и суффикс</td><td><code>HasPrefix</code>, <code>HasSuffix</code>, <code>TrimPrefix</code>, <code>TrimSuffix</code></td></tr>
+        <tr><td>разрезание</td><td><code>Cut</code>, <code>CutLast</code> [1.27], <code>CutPrefix</code>, <code>CutSuffix</code>, <code>Split</code>, <code>SplitN</code>, <code>SplitAfter</code>, <code>SplitAfterN</code></td></tr>
+        <tr><td>поля</td><td><code>Fields</code>, <code>FieldsFunc</code></td></tr>
+        <tr><td>итераторы [1.24]</td><td><code>Lines</code>, <code>SplitSeq</code>, <code>SplitAfterSeq</code>, <code>FieldsSeq</code>, <code>FieldsFuncSeq</code></td></tr>
+        <tr><td>сборка</td><td><code>Join</code>, <code>Repeat</code>, <code>Builder</code>, <code>NewReplacer</code></td></tr>
+        <tr><td>замена</td><td><code>Replace</code>, <code>ReplaceAll</code>, <code>Map</code></td></tr>
+        <tr><td>регистр и обрезка</td><td><code>ToLower</code>, <code>ToUpper</code>, <code>ToTitle</code>, <code>ToValidUTF8</code>, <code>Trim</code>, <code>TrimLeft</code>, <code>TrimRight</code>, <code>TrimSpace</code>, <code>TrimFunc</code></td></tr>
+        <tr><td>сравнение</td><td><code>EqualFold</code>, <code>Compare</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>s := "key=value"
+
+before, after, ok := strings.Cut(s, "=")
+fmt.Println(before, after, ok) // key value true
+
+rest, ok := strings.CutPrefix(s, "key=")
+fmt.Println(rest, ok) // value true
+
+for line := range strings.Lines("a\nb\n") {
+    fmt.Print(line)
+}</code></pre>
+
+  <p><code>Builder</code> собирает строку без квадратичных копирований, <code>Reader</code> даёт <code>io.Reader</code> над строкой, <code>Replacer</code> выполняет несколько замен за один проход. В <code>bytes</code> те же роли играют <code>Buffer</code> и <code>Reader</code>.</p>
+
+  <pre><code>var b strings.Builder
+b.Grow(32)
+b.WriteString("id=")
+b.WriteString("42")
+s := b.String()</code></pre>
+</section>
+
+<section id="strconv">
+  <h2>2. strconv</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Преобразование</th><th>Функции</th></tr></thead>
+      <tbody>
+        <tr><td>целое ↔ строка</td><td><code>Atoi</code>, <code>Itoa</code></td></tr>
+        <tr><td>целое с основанием</td><td><code>ParseInt</code>, <code>ParseUint</code>, <code>FormatInt</code>, <code>FormatUint</code></td></tr>
+        <tr><td>дробное</td><td><code>ParseFloat</code>, <code>FormatFloat</code></td></tr>
+        <tr><td>логическое</td><td><code>ParseBool</code>, <code>FormatBool</code></td></tr>
+        <tr><td>кавычки</td><td><code>Quote</code>, <code>QuoteToASCII</code>, <code>Unquote</code>, <code>UnquoteChar</code></td></tr>
+        <tr><td>дописывание в срез</td><td><code>AppendInt</code>, <code>AppendUint</code>, <code>AppendFloat</code>, <code>AppendBool</code>, <code>AppendQuote</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>ParseInt(s, base, bitSize)</code>: <code>base</code> от 2 до 36 или 0 — тогда основание определяется по префиксу (<code>0x</code>, <code>0o</code>, <code>0b</code>). <code>bitSize</code> ограничивает результат: 0 — <code>int</code>, 8/16/32/64 — соответствующий размер. <code>FormatFloat</code> принимает формат <code>'f'</code>, <code>'e'</code>, <code>'E'</code>, <code>'g'</code>, <code>'G'</code>, <code>'x'</code>.</p>
+
+  <pre><code>n, err := strconv.Atoi("42")
+if err != nil {
+    return err
+}
+
+hex := strconv.FormatInt(int64(n), 16) // "2a"
+f, _ := strconv.ParseFloat("3.14", 64)
+s := strconv.FormatFloat(f, 'f', 2, 64) // "3.14"</code></pre>
+</section>
+
+<section id="fmt">
+  <h2>3. fmt</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Глагол</th><th>Что печатает</th></tr></thead>
+      <tbody>
+        <tr><td><code>%v</code></td><td>значение в формате по умолчанию</td></tr>
+        <tr><td><code>%+v</code></td><td>структуру с именами полей</td></tr>
+        <tr><td><code>%#v</code></td><td>Go-синтаксис значения</td></tr>
+        <tr><td><code>%T</code></td><td>тип значения</td></tr>
+        <tr><td><code>%p</code></td><td>адрес указателя</td></tr>
+        <tr><td><code>%t</code></td><td><code>bool</code></td></tr>
+        <tr><td><code>%d</code>, <code>%b</code>, <code>%o</code>, <code>%O</code>, <code>%x</code>, <code>%X</code></td><td>целое в десятичном, двоичном, восьмеричном, восьмеричном с <code>0o</code>, шестнадцатеричном</td></tr>
+        <tr><td><code>%c</code>, <code>%q</code>, <code>%U</code></td><td>символ, строка в кавычках, код Unicode</td></tr>
+        <tr><td><code>%s</code></td><td>строка или <code>[]byte</code></td></tr>
+        <tr><td><code>%f</code>, <code>%e</code>, <code>%E</code>, <code>%g</code>, <code>%G</code></td><td>дробное в разных нотациях</td></tr>
+        <tr><td><code>%w</code></td><td>обёртка ошибки для <code>Errorf</code></td></tr>
+        <tr><td><code>%%</code></td><td>литеральный процент</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Флаги: <code>+</code> — знак или имена полей, <code>-</code> — выравнивание влево, <code>#</code> — альтернативная форма, <code>0</code> — ведущие нули, пробел — пробел вместо плюса. Ширина и точность задаются как <code>%8.2f</code> или через <code>*</code>.</p>
+
+  <pre><code>type User struct {
+    ID   int
+    Name string
+}
+
+u := User{ID: 7, Name: "Аня"}
+fmt.Printf("%v\n", u)   // {7 Аня}
+fmt.Printf("%+v\n", u)  // {ID:7 Name:Аня}
+fmt.Printf("%#v\n", u)  // main.User{ID:7, Name:"Аня"}
+fmt.Printf("%08d\n", 42) // 00000042</code></pre>
+
+  <p>Семейства: <code>Print</code>/<code>Printf</code>/<code>Println</code> пишут в стандартный вывод, <code>Sprint*</code> возвращают строку, <code>Fprint*</code> пишут в <code>io.Writer</code>, <code>Errorf</code> создаёт ошибку, <code>Scan*</code> читают ввод.</p>
+</section>
+
+<section id="io">
+  <h2>4. io, io/fs, bufio</h2>
+
+  <p><code>io</code> задаёт интерфейсы потоков. Чем меньше интерфейс, тем легче его реализовать и подменить в тестах.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Интерфейс</th><th>Методы</th></tr></thead>
+      <tbody>
+        <tr><td><code>io.Reader</code></td><td><code>Read(p []byte) (n int, err error)</code></td></tr>
+        <tr><td><code>io.Writer</code></td><td><code>Write(p []byte) (n int, err error)</code></td></tr>
+        <tr><td><code>io.Closer</code></td><td><code>Close() error</code></td></tr>
+        <tr><td><code>io.Seeker</code></td><td><code>Seek(offset int64, whence int) (int64, error)</code></td></tr>
+        <tr><td><code>io.ReaderAt</code></td><td><code>ReadAt(p []byte, off int64) (n int, err error)</code></td></tr>
+        <tr><td><code>io.WriterAt</code></td><td><code>WriteAt(p []byte, off int64) (n int, err error)</code></td></tr>
+        <tr><td><code>io.ReaderFrom</code></td><td><code>ReadFrom(r Reader) (n int64, err error)</code></td></tr>
+        <tr><td><code>io.WriterTo</code></td><td><code>WriteTo(w Writer) (n int64, err error)</code></td></tr>
+        <tr><td><code>io.ByteReader</code></td><td><code>ReadByte() (byte, error)</code></td></tr>
+        <tr><td><code>io.RuneReader</code></td><td><code>ReadRune() (r rune, size int, err error)</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Функция</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>io.Copy</code>, <code>io.CopyN</code>, <code>io.CopyBuffer</code></td><td>копирует поток; использует <code>WriterTo</code>/<code>ReaderFrom</code>, если они есть</td></tr>
+        <tr><td><code>io.ReadAll</code>, <code>io.ReadFull</code></td><td>читает всё или ровно буфер</td></tr>
+        <tr><td><code>io.LimitReader</code></td><td>ограничивает число читаемых байт</td></tr>
+        <tr><td><code>io.TeeReader</code></td><td>читает и одновременно пишет копию в <code>Writer</code></td></tr>
+        <tr><td><code>io.MultiReader</code>, <code>io.MultiWriter</code></td><td>склеивает несколько потоков</td></tr>
+        <tr><td><code>io.Pipe</code></td><td>синхронная труба в памяти</td></tr>
+        <tr><td><code>io.Discard</code>, <code>io.NopCloser</code></td><td>пустой приёмник и обёртка без <code>Close</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Ошибки: <code>io.EOF</code> — штатный конец потока; <code>io.ErrUnexpectedEOF</code> — поток кончился раньше, чем ожидалось; <code>io.ErrShortWrite</code> — записано меньше, чем просили.</p>
+
+  <p><code>io/fs</code> — абстракция файловой системы: <code>fs.FS</code>, <code>fs.File</code>, <code>fs.DirEntry</code>, <code>fs.FileInfo</code>. Функции <code>fs.ReadFile</code>, <code>fs.ReadDir</code>, <code>fs.WalkDir</code>, <code>fs.Glob</code>, <code>fs.Sub</code>, <code>fs.ValidPath</code>. Обход останавливают <code>fs.SkipDir</code> и <code>fs.SkipAll</code>.</p>
+
+  <p><code>bufio</code> добавляет буфер: <code>Reader</code> с <code>ReadString</code>, <code>ReadBytes</code>, <code>Peek</code>, <code>Scanner</code> с <code>Scan</code>/<code>Text</code>/<code>Bytes</code> и функциями разбиения <code>ScanLines</code>, <code>ScanWords</code>, <code>ScanRunes</code>, <code>ScanBytes</code>.</p>
+
+  <pre><code>f, err := os.Open("data.txt")
+if err != nil {
+    return err
+}
+defer f.Close()
+
+sc := bufio.NewScanner(f)
+sc.Buffer(make([]byte, 64*1024), 1024*1024)
+for sc.Scan() {
+    fmt.Println(sc.Text())
+}
+if err := sc.Err(); err != nil {
+    return err
+}</code></pre>
+</section>
+
+<section id="os">
+  <h2>5. os, os/exec, path/filepath</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Задача</th><th>Функции <code>os</code></th></tr></thead>
+      <tbody>
+        <tr><td>файлы</td><td><code>Open</code>, <code>Create</code>, <code>ReadFile</code>, <code>WriteFile</code>, <code>Remove</code>, <code>Rename</code></td></tr>
+        <tr><td>каталоги</td><td><code>Mkdir</code>, <code>MkdirAll</code>, <code>ReadDir</code>, <code>RemoveAll</code></td></tr>
+        <tr><td>метаданные</td><td><code>Stat</code>, <code>Lstat</code>, <code>Chmod</code>, <code>Chown</code>, <code>SameFile</code></td></tr>
+        <tr><td>окружение</td><td><code>Getenv</code>, <code>LookupEnv</code>, <code>Setenv</code>, <code>Unsetenv</code>, <code>Environ</code>, <code>Args</code>, <code>Exit</code></td></tr>
+        <tr><td>потоки</td><td><code>Stdin</code>, <code>Stdout</code>, <code>Stderr</code></td></tr>
+        <tr><td>проверка ошибок</td><td><code>IsNotExist</code>, <code>IsExist</code>, <code>IsPermission</code>, <code>IsTimeout</code></td></tr>
+        <tr><td>безопасный доступ [1.24]</td><td><code>OpenRoot</code>, тип <code>os.Root</code></td></tr>
+        <tr><td>копирование дерева [1.23]</td><td><code>CopyFS</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>os.Root</code> ограничивает операции каталогом: пути, ведущие наружу, включая символические ссылки, запрещены. Это защита от обхода каталога, когда часть пути приходит извне.</p>
+
+  <pre><code>root, err := os.OpenRoot("/srv/uploads")
+if err != nil {
+    return err
+}
+defer root.Close()
+
+f, err := root.Open("report.txt") // только внутри /srv/uploads
+if err != nil {
+    return err
+}
+defer f.Close()</code></pre>
+
+  <p><code>os/exec</code> запускает процессы: <code>Command</code>, <code>CommandContext</code>, <code>Run</code>, <code>Output</code>, <code>CombinedOutput</code>, <code>StdoutPipe</code>/<code>StdinPipe</code>, <code>Start</code>/<code>Wait</code>. Ошибку ненулевого кода возвращает <code>*exec.ExitError</code>; <code>exec.LookPath</code> ищет исполняемый файл в <code>PATH</code>.</p>
+
+  <pre><code>ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+cmd := exec.CommandContext(ctx, "git", "rev-parse", "HEAD")
+out, err := cmd.Output()
+if err != nil {
+    return fmt.Errorf("git: %w", err)
+}
+fmt.Println(strings.TrimSpace(string(out)))</code></pre>
+
+  <p><code>path/filepath</code> работает с путями текущей ОС: <code>Join</code>, <code>Clean</code>, <code>Abs</code>, <code>Base</code>, <code>Dir</code>, <code>Ext</code>, <code>Rel</code>, <code>Match</code>, <code>Glob</code>, <code>WalkDir</code>, <code>EvalSymlinks</code>, <code>ToSlash</code>/<code>FromSlash</code>, <code>Separator</code>. Для URL-путей есть отдельный <code>path</code>.</p>
+</section>
+
+<section id="time">
+  <h2>6. time</h2>
+
+  <p><code>time.Time</code> — момент времени с часовым поясом; <code>time.Duration</code> — длительность в наносекундах. <code>Now</code> несёт монотонное показание, поэтому <code>Sub</code> и сравнения не зависят от перевода системных часов; форматирование монотонную часть отбрасывает.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Задача</th><th>API</th></tr></thead>
+      <tbody>
+        <tr><td>текущее время</td><td><code>Now</code>, <code>Since</code>, <code>Until</code></td></tr>
+        <tr><td>из Unix</td><td><code>Unix</code>, <code>UnixMilli</code>, <code>UnixMicro</code>, <code>UnixNano</code></td></tr>
+        <tr><td>арифметика</td><td><code>Add</code>, <code>AddDate</code>, <code>Sub</code></td></tr>
+        <tr><td>сравнение</td><td><code>Before</code>, <code>After</code>, <code>Equal</code>, <code>Compare</code> [1.20]</td></tr>
+        <tr><td>округление</td><td><code>Truncate</code>, <code>Round</code></td></tr>
+        <tr><td>формат</td><td><code>Format</code>, <code>Parse</code>, <code>ParseInLocation</code></td></tr>
+        <tr><td>пояс</td><td><code>LoadLocation</code>, <code>FixedZone</code>, <code>In</code></td></tr>
+        <tr><td>таймеры</td><td><code>NewTimer</code>, <code>NewTicker</code>, <code>After</code>, <code>AfterFunc</code>, <code>Sleep</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Раскладка задаётся эталонным временем <code>Mon Jan 2 15:04:05 MST 2006</code>. Готовые константы: <code>ANSIC</code>, <code>UnixDate</code>, <code>RFC822</code>, <code>RFC822Z</code>, <code>RFC850</code>, <code>RFC1123</code>, <code>RFC1123Z</code>, <code>RFC3339</code>, <code>RFC3339Nano</code>, <code>Kitchen</code>, <code>Stamp</code>, <code>StampMilli</code>, <code>StampMicro</code>, <code>StampNano</code>, <code>DateTime</code> [1.20], <code>DateOnly</code> [1.20], <code>TimeOnly</code> [1.20].</p>
+
+  <pre><code>t, err := time.Parse(time.RFC3339, "2026-11-04T10:30:00Z")
+if err != nil {
+    return err
+}
+
+fmt.Println(t.Format(time.DateOnly)) // 2026-11-04
+
+ticker := time.NewTicker(time.Second)
+defer ticker.Stop()
+for range ticker.C {
+    break
+}</code></pre>
+
+  <p class="is-muted"><code>time.After</code> в цикле создаёт новый таймер на каждой итерации; <code>NewTimer</code> с <code>Reset</code> переиспользует один. <code>Ticker</code> и <code>Timer</code> нужно останавливать, иначе они живут до срабатывания.</p>
+</section>
+
+<section id="json">
+  <h2>7. encoding/json</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>API</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>json.Marshal</code>, <code>MarshalIndent</code></td><td>значение → JSON</td></tr>
+        <tr><td><code>json.Unmarshal</code></td><td>JSON → значение</td></tr>
+        <tr><td><code>json.NewEncoder</code></td><td>потоковая запись в <code>io.Writer</code></td></tr>
+        <tr><td><code>json.NewDecoder</code></td><td>потоковое чтение из <code>io.Reader</code></td></tr>
+        <tr><td><code>json.RawMessage</code></td><td>отложенный разбор вложенного JSON</td></tr>
+        <tr><td><code>json.Number</code></td><td>число без потери точности</td></tr>
+        <tr><td><code>json.Marshaler</code>, <code>Unmarshaler</code></td><td>своё представление типа</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Теги полей: <code>json:"name"</code>, <code>json:"-"</code> — исключить, <code>omitempty</code> — пропустить пустое, <code>omitzero</code> [1.24] — пропустить нулевое (в том числе нулевой <code>time.Time</code>), <code>string</code> — закодировать число или bool строкой.</p>
+
+  <pre><code>type User struct {
+    ID        int       `json:"id"`
+    Name      string    `json:"name"`
+    Email     string    `json:"email,omitempty"`
+    CreatedAt time.Time `json:"created_at,omitzero"`
+}
+
+data, err := json.Marshal(User{ID: 1, Name: "Аня"})
+if err != nil {
+    return err
+}
+fmt.Println(string(data)) // {"id":1,"name":"Аня"}</code></pre>
+
+  <p><code>Decoder.DisallowUnknownFields</code> запрещает лишние поля, <code>UseNumber</code> сохраняет числа как <code>json.Number</code>, <code>More</code> и <code>Token</code> позволяют читать поток токенов. <code>Encoder.SetEscapeHTML(false)</code> отключает экранирование <code>&lt;</code>, <code>&gt;</code> и <code>&amp;</code>; по умолчанию оно включено.</p>
+
+  <pre><code>dec := json.NewDecoder(r.Body)
+dec.DisallowUnknownFields()
+
+var req CreateUser
+if err := dec.Decode(&amp;req); err != nil {
+    return fmt.Errorf("decode: %w", err)
+}</code></pre>
+</section>
+
+<section id="http">
+  <h2>8. net/http</h2>
+
+  <p>Пакет даёт и клиент, и сервер. Устройство запроса, middleware, таймауты и завершение разобраны в листе «HTTP-сервис»; здесь — карта API.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Сторона</th><th>API</th></tr></thead>
+      <tbody>
+        <tr><td>клиент</td><td><code>Client</code>, <code>Get</code>, <code>Post</code>, <code>PostForm</code>, <code>Head</code>, <code>NewRequest</code>, <code>NewRequestWithContext</code>, <code>Do</code></td></tr>
+        <tr><td>запрос</td><td><code>Request</code>: <code>Method</code>, <code>URL</code>, <code>Header</code>, <code>Body</code>, <code>Context</code>, <code>PathValue</code></td></tr>
+        <tr><td>ответ</td><td><code>Response</code>: <code>StatusCode</code>, <code>Header</code>, <code>Body</code>; <code>Body</code> нужно закрывать</td></tr>
+        <tr><td>маршрутизация</td><td><code>ServeMux</code>, <code>Handler</code>, <code>HandlerFunc</code>, <code>NotFound</code></td></tr>
+        <tr><td>сервер</td><td><code>Server</code>, <code>ListenAndServe</code>, <code>Shutdown</code>, <code>Close</code></td></tr>
+        <tr><td>ответ обработчика</td><td><code>ResponseWriter</code>, <code>Flusher</code>, <code>Hijacker</code>, <code>NewResponseController</code> [1.20]</td></tr>
+        <tr><td>тесты</td><td><code>httptest.NewRecorder</code>, <code>httptest.NewServer</code>, <code>httptest.NewRequest</code></td></tr>
+        <tr><td>CSRF [1.25]</td><td><code>CrossOriginProtection</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>С Go 1.22 шаблоны <code>ServeMux</code> принимают метод и подстановки: <code>"GET /users/{id}"</code>, значение — <code>r.PathValue("id")</code>. Шаблон с методом приоритетнее шаблона без метода; <code>{$}</code> требует точного совпадения пути.</p>
+
+  <pre><code>mux := http.NewServeMux()
+mux.HandleFunc("GET /users/{id}", func(w http.ResponseWriter, r *http.Request) {
+    id := r.PathValue("id")
+    fmt.Fprintf(w, "user %s", id)
+})
+
+srv := &amp;http.Server{
+    Addr:              ":8080",
+    Handler:           mux,
+    ReadHeaderTimeout: 5 * time.Second,
+}
+log.Fatal(srv.ListenAndServe())</code></pre>
+
+  <p>Клиент без таймаута может ждать вечно; таймаут задают на <code>Client</code> или через контекст запроса. <code>Transport</code> переиспользует соединения, поэтому создавать новый <code>Client</code> на каждый запрос не нужно.</p>
+
+  <pre><code>client := &amp;http.Client{Timeout: 5 * time.Second}
+
+req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+if err != nil {
+    return err
+}
+
+resp, err := client.Do(req)
+if err != nil {
+    return err
+}
+defer resp.Body.Close()</code></pre>
+</section>
+
+<section id="slog">
+  <h2>9. log/slog</h2>
+
+  <p><code>log/slog</code> (Go 1.21) — структурное логирование: запись состоит из сообщения и набора пар «ключ — значение». Обработчик (<code>Handler</code>) решает, в каком формате и куда писать.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>API</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>slog.New</code></td><td>логгер с заданным обработчиком</td></tr>
+        <tr><td><code>NewTextHandler</code>, <code>NewJSONHandler</code></td><td>текстовый и JSON-формат</td></tr>
+        <tr><td><code>HandlerOptions</code></td><td><code>Level</code>, <code>AddSource</code>, <code>ReplaceAttr</code></td></tr>
+        <tr><td><code>Debug</code>, <code>Info</code>, <code>Warn</code>, <code>Error</code></td><td>уровни; <code>Log</code> и <code>LogAttrs</code> — с явным уровнем</td></tr>
+        <tr><td><code>With</code>, <code>WithGroup</code></td><td>постоянные атрибуты и вложенная группа</td></tr>
+        <tr><td><code>String</code>, <code>Int</code>, <code>Int64</code>, <code>Float64</code>, <code>Bool</code>, <code>Time</code>, <code>Duration</code>, <code>Any</code>, <code>Group</code></td><td>построение <code>Attr</code></td></tr>
+        <tr><td><code>LevelVar</code></td><td>уровень, который можно менять во время работы</td></tr>
+        <tr><td><code>LogValuer</code></td><td>своё представление значения в логе</td></tr>
+        <tr><td><code>SetDefault</code></td><td>логгер по умолчанию для пакетных функций</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>var level slog.LevelVar
+level.Set(slog.LevelInfo)
+
+h := slog.NewJSONHandler(os.Stdout, &amp;slog.HandlerOptions{
+    Level:     &amp;level,
+    AddSource: true,
+})
+log := slog.New(h).With("service", "billing")
+
+log.Info("started", "addr", ":8080")
+log.Error("request failed", "err", err, "user_id", 42)</code></pre>
+
+  <p class="is-muted">Уровни: <code>Debug</code>, <code>Info</code>, <code>Warn</code>, <code>Error</code>. Контекстные варианты <code>InfoContext</code> и подобные передают <code>context.Context</code> обработчику, который может достать из него трассировку или идентификатор запроса.</p>
+</section>
+
+<section id="collections">
+  <h2>10. slices, maps, cmp, sort</h2>
+
+  <p>Пакеты <code>slices</code> и <code>maps</code> (Go 1.21) — обобщённые операции над срезами и мапами. С Go 1.23 часть функций возвращает итераторы <code>iter.Seq</code>, которые работают в <code>for range</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Пакет</th><th>Функции</th></tr></thead>
+      <tbody>
+        <tr><td><code>slices</code></td><td><code>Equal</code>, <code>EqualFunc</code>, <code>Compare</code>, <code>CompareFunc</code>, <code>Index</code>, <code>IndexFunc</code>, <code>Contains</code>, <code>ContainsFunc</code>, <code>Insert</code>, <code>Delete</code>, <code>DeleteFunc</code>, <code>Replace</code>, <code>Clone</code>, <code>Compact</code>, <code>CompactFunc</code>, <code>Grow</code>, <code>Clip</code>, <code>Reverse</code>, <code>Concat</code>, <code>Repeat</code></td></tr>
+        <tr><td><code>slices</code>: сортировка</td><td><code>Sort</code>, <code>SortFunc</code>, <code>SortStableFunc</code>, <code>IsSorted</code>, <code>IsSortedFunc</code>, <code>Min</code>, <code>MinFunc</code>, <code>Max</code>, <code>MaxFunc</code>, <code>BinarySearch</code>, <code>BinarySearchFunc</code></td></tr>
+        <tr><td><code>slices</code>: итераторы</td><td><code>All</code>, <code>Backward</code>, <code>Values</code>, <code>AppendSeq</code>, <code>Collect</code>, <code>Sorted</code>, <code>SortedFunc</code>, <code>SortedStableFunc</code>, <code>Chunk</code></td></tr>
+        <tr><td><code>maps</code></td><td><code>Equal</code>, <code>EqualFunc</code>, <code>Clone</code>, <code>Copy</code>, <code>DeleteFunc</code></td></tr>
+        <tr><td><code>maps</code>: итераторы</td><td><code>All</code>, <code>Keys</code>, <code>Values</code>, <code>Insert</code>, <code>Collect</code></td></tr>
+        <tr><td><code>cmp</code></td><td><code>Compare</code>, <code>Less</code>, <code>Or</code>; ограничение <code>cmp.Ordered</code></td></tr>
+        <tr><td><code>sort</code></td><td><code>Ints</code>, <code>Strings</code>, <code>Slice</code>, <code>SliceStable</code>, <code>Search</code>, <code>SearchInts</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>nums := []int{3, 1, 2}
+slices.Sort(nums)                 // [1 2 3]
+fmt.Println(slices.Contains(nums, 2))
+
+people := []Person{{"Аня", 30}, {"Борис", 25}}
+slices.SortFunc(people, func(a, b Person) int {
+    return cmp.Compare(a.Age, b.Age)
+})
+
+m := map[string]int{"b": 2, "a": 1}
+keys := slices.Sorted(maps.Keys(m)) // [a b]</code></pre>
+
+  <p class="is-muted"><code>sort.Slice</code> принимает функцию сравнения по индексам и работает через отражение; для типизированных срезов <code>slices.SortFunc</code> быстрее и безопаснее по типам.</p>
+</section>
+
+<section id="embed">
+  <h2>11. embed</h2>
+
+  <p>Директива <code>//go:embed</code> встраивает файлы в бинарник. Переменная может быть <code>string</code>, <code>[]byte</code> или <code>embed.FS</code>; для каталога — только <code>embed.FS</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Шаблон</th><th>Что встраивает</th></tr></thead>
+      <tbody>
+        <tr><td><code>//go:embed hello.txt</code></td><td>один файл</td></tr>
+        <tr><td><code>//go:embed static/*</code></td><td>файлы каталога без вложенных каталогов</td></tr>
+        <tr><td><code>//go:embed static</code></td><td>весь каталог рекурсивно</td></tr>
+        <tr><td><code>//go:embed all:static</code></td><td>каталог, включая файлы, начинающиеся с <code>.</code> или <code>_</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Шаблон не может содержать <code>.</code>, <code>..</code> или начинаться с <code>/</code>. Файлы, начинающиеся с <code>.</code> или <code>_</code>, по умолчанию пропускаются — их включает префикс <code>all:</code>.</p>
+
+  <pre><code>import "embed"
+
+//go:embed static
+var static embed.FS
+
+func main() {
+    sub, err := fs.Sub(static, "static")
+    if err != nil {
+        log.Fatal(err)
+    }
+    http.Handle("/", http.FileServer(http.FS(sub)))
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}</code></pre>
+
+  <p class="is-muted"><code>embed.FS</code> реализует <code>fs.FS</code>, поэтому его можно отдать в <code>http.FS</code>, <code>template.ParseFS</code> или <code>fs.WalkDir</code>.</p>
+</section>
+
+<section id="sources">
+  <h2>12. Первоисточники</h2>
+  <ul>
+    <li><a href="https://pkg.go.dev/strings">pkg.go.dev/strings</a> и <a href="https://pkg.go.dev/bytes">pkg.go.dev/bytes</a></li>
+    <li><a href="https://pkg.go.dev/strconv">pkg.go.dev/strconv</a></li>
+    <li><a href="https://pkg.go.dev/fmt">pkg.go.dev/fmt</a></li>
+    <li><a href="https://pkg.go.dev/io">pkg.go.dev/io</a>, <a href="https://pkg.go.dev/io/fs">pkg.go.dev/io/fs</a>, <a href="https://pkg.go.dev/bufio">pkg.go.dev/bufio</a></li>
+    <li><a href="https://pkg.go.dev/os">pkg.go.dev/os</a>, <a href="https://pkg.go.dev/os/exec">pkg.go.dev/os/exec</a>, <a href="https://pkg.go.dev/path/filepath">pkg.go.dev/path/filepath</a></li>
+    <li><a href="https://pkg.go.dev/time">pkg.go.dev/time</a></li>
+    <li><a href="https://pkg.go.dev/encoding/json">pkg.go.dev/encoding/json</a></li>
+    <li><a href="https://pkg.go.dev/net/http">pkg.go.dev/net/http</a></li>
+    <li><a href="https://pkg.go.dev/log/slog">pkg.go.dev/log/slog</a></li>
+    <li><a href="https://pkg.go.dev/slices">pkg.go.dev/slices</a>, <a href="https://pkg.go.dev/maps">pkg.go.dev/maps</a>, <a href="https://pkg.go.dev/cmp">pkg.go.dev/cmp</a>, <a href="https://pkg.go.dev/sort">pkg.go.dev/sort</a></li>
+    <li><a href="https://pkg.go.dev/embed">pkg.go.dev/embed</a></li>
+    <li><a href="https://go.dev/doc/go1.24">Release notes Go 1.24</a> — <code>os.Root</code>, <code>omitzero</code>, итераторы <code>strings</code> и <code>bytes</code></li>
+    <li><a href="https://go.dev/doc/go1.25">Release notes Go 1.25</a> — <code>http.CrossOriginProtection</code></li>
+    <li><a href="https://go.dev/doc/go1.27">Release notes Go 1.27</a> — <code>strings.CutLast</code>, <code>bytes.CutLast</code></li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
