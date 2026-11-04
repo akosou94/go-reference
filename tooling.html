@@ -61,9 +61,429 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>Инструменты — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead"><code>go</code>-команды, модули и workspaces, тесты и fuzzing, бенчмарки, <code>vet</code> и <code>staticcheck</code>, race detector, <code>pprof</code>, delve, сборка и кросс-компиляция.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из документации <a href="https://go.dev/ref/mod">Go Modules Reference</a>, <a href="https://go.dev/cmd/go/">go command</a>, <a href="https://go.dev/doc/testing">Testing</a>, <a href="https://go.dev/doc/fuzz/">Fuzzing</a>, <a href="https://go.dev/doc/toolchain">Go Toolchains</a> и release notes Go 1.21–1.27.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#commands">1. go-команды и окружение</a></li>
+    <li><a href="#modules">2. Модули и версии</a></li>
+    <li><a href="#workspaces">3. Workspaces</a></li>
+    <li><a href="#testing">4. Тесты</a></li>
+    <li><a href="#fuzzing">5. Fuzzing</a></li>
+    <li><a href="#benchmarks">6. Бенчмарки</a></li>
+    <li><a href="#static">7. Статический анализ</a></li>
+    <li><a href="#race">8. Race detector</a></li>
+    <li><a href="#profiling">9. Профилирование и отладка</a></li>
+    <li><a href="#build">10. Сборка и релиз</a></li>
+    <li><a href="#sources">11. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="commands">
+  <h2>1. go-команды и окружение</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Команда</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>go build</code></td><td>собирает пакеты и бинарник в текущем каталоге</td></tr>
+        <tr><td><code>go run</code></td><td>собирает и запускает; кэширует результат</td></tr>
+        <tr><td><code>go install</code></td><td>собирает и кладёт бинарник в <code>GOBIN</code></td></tr>
+        <tr><td><code>go get</code></td><td>добавляет или обновляет зависимости в <code>go.mod</code></td></tr>
+        <tr><td><code>go mod</code></td><td><code>init</code>, <code>tidy</code>, <code>download</code>, <code>vendor</code>, <code>graph</code>, <code>why</code>, <code>edit</code>, <code>verify</code></td></tr>
+        <tr><td><code>go work</code></td><td><code>init</code>, <code>use</code>, <code>sync</code>, <code>edit</code></td></tr>
+        <tr><td><code>go test</code></td><td>тесты, бенчмарки, fuzzing, покрытие</td></tr>
+        <tr><td><code>go vet</code></td><td>анализ кода на типовые ошибки</td></tr>
+        <tr><td><code>go fix</code></td><td>модернизация кода: обновление идиом и API [1.26]</td></tr>
+        <tr><td><code>go generate</code></td><td>выполняет <code>//go:generate</code> директивы</td></tr>
+        <tr><td><code>go tool</code></td><td>запускает инструменты из тулчейна и из <code>tool</code>-директив модуля [1.24]</td></tr>
+        <tr><td><code>go env</code></td><td>показывает и меняет переменные окружения Go</td></tr>
+        <tr><td><code>go version -m ./bin</code></td><td>модули и версии, вшитые в бинарник</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>GOTOOLCHAIN</code> управляет выбором тулчейна. Начиная с Go 1.21 строка <code>go</code> в <code>go.mod</code> — строгий минимум: если модулю нужна более новая версия, <code>go</code> скачает и запустит её. <code>GOTOOLCHAIN=local</code> запрещает переключение, <code>GOTOOLCHAIN=go1.27.0</code> фиксирует версию.</p>
+
+  <pre><code>go env GOMOD GOPATH GOBIN GOTOOLCHAIN
+go help mod tidy
+go doc fmt.Printf</code></pre>
+</section>
+
+<section id="modules">
+  <h2>2. Модули и версии</h2>
+
+  <p>Модуль — набор пакетов с общим <code>go.mod</code>. Версии зависимостей выбираются по принципу минимальной версии (MVS): побеждает самая высокая из минимально требуемых, а не самая свежая.</p>
+
+  <pre><code>module example.com/billing
+
+go 1.27
+
+toolchain go1.27.0
+
+require (
+    github.com/jackc/pgx/v5 v5.12.0
+    golang.org/x/sync v0.19.0
+)
+
+require github.com/jackc/puddle/v2 v2.2.2 // indirect
+
+replace example.com/legacy =&gt; ../legacy
+
+tool golang.org/x/tools/cmd/stringer</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Директива</th><th>Смысл</th></tr></thead>
+      <tbody>
+        <tr><td><code>module</code></td><td>импортный путь модуля</td></tr>
+        <tr><td><code>go</code></td><td>минимальная версия языка; влияет на поведение и <code>GODEBUG</code></td></tr>
+        <tr><td><code>toolchain</code></td><td>рекомендуемый тулчейн, может быть новее <code>go</code></td></tr>
+        <tr><td><code>require</code></td><td>зависимость и минимальная версия</td></tr>
+        <tr><td><code>replace</code></td><td>подменить модуль или версию локальным путём</td></tr>
+        <tr><td><code>exclude</code></td><td>исключить версию из выбора</td></tr>
+        <tr><td><code>retract</code></td><td>объявить свои версии отозванными</td></tr>
+        <tr><td><code>tool</code></td><td>исполняемая зависимость; запускается <code>go tool</code> [1.24]</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>go mod tidy</code> приводит <code>go.mod</code> и <code>go.sum</code> в соответствие с импортами. С Go 1.23 есть <code>go mod tidy -diff</code>: показать изменения и не писать файлы. С Go 1.27 для модулей с <code>go 1.27</code> tidy схлопывает дублирующиеся блоки <code>require</code> в два: прямые и косвенные.</p>
+
+  <pre><code>go mod init example.com/billing
+go mod tidy -diff
+go get github.com/jackc/pgx/v5@v5.12.0
+go get -u ./...
+go get -tool golang.org/x/tools/cmd/stringer
+go install tool
+
+go mod why -m golang.org/x/sync
+go mod graph | head</code></pre>
+
+  <p class="is-muted">Приватные модули: <code>GOPRIVATE</code> задаёт шаблоны путей, для которых не используются публичные прокси и проверка sumdb; <code>GONOPROXY</code> и <code>GONOSUMDB</code> уточняют поведение по отдельности. <code>GOAUTH</code> [1.24] настраивает аутентификацию для закрытых хостов.</p>
+</section>
+
+<section id="workspaces">
+  <h2>3. Workspaces</h2>
+
+  <p>Workspace объединяет несколько модулей в одну сборку без <code>replace</code> на каждый. Файл <code>go.work</code> лежит над модулями и действует, пока <code>GOWORK</code> не указывает на другой файл или <code>off</code>.</p>
+
+  <pre><code>go work init ./api ./worker ./shared
+
+# go.work
+go 1.27
+
+use (
+    ./api
+    ./worker
+    ./shared
+)</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Команда</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>go work init</code></td><td>создаёт <code>go.work</code> с перечисленными модулями</td></tr>
+        <tr><td><code>go work use ./path</code></td><td>добавляет модуль в workspace</td></tr>
+        <tr><td><code>go work sync</code></td><td>переносит выбранные версии из workspace в <code>go.mod</code> модулей</td></tr>
+        <tr><td><code>go work edit</code></td><td>правит <code>go.work</code> из командной строки</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted"><code>go.work</code> обычно не коммитят: он описывает локальную раскладку каталогов. В CI собирают модули по отдельности или генерируют workspace явно.</p>
+</section>
+
+<section id="testing">
+  <h2>4. Тесты</h2>
+
+  <p>Тест — функция <code>TestXxx(t *testing.T)</code> в файле <code>_test.go</code>. Пакет теста может быть тем же (<code>package store</code>) или внешним (<code>package store_test</code>); внешний видит только экспортированное.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Флаг</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>-run</code></td><td>фильтр по имени теста или подтеста</td></tr>
+        <tr><td><code>-v</code></td><td>подробный вывод</td></tr>
+        <tr><td><code>-count=1</code></td><td>отключить кэш результатов</td></tr>
+        <tr><td><code>-shuffle=on</code></td><td>случайный порядок тестов</td></tr>
+        <tr><td><code>-cover</code>, <code>-coverprofile</code></td><td>покрытие и файл профиля</td></tr>
+        <tr><td><code>-timeout</code></td><td>предел на весь пакет, по умолчанию 10 минут</td></tr>
+        <tr><td><code>-race</code></td><td>детектор гонок</td></tr>
+        <tr><td><code>-bench</code>, <code>-benchmem</code></td><td>бенчмарки и аллокации</td></tr>
+        <tr><td><code>-fuzz</code>, <code>-fuzztime</code></td><td>fuzzing и его длительность</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>func TestParseAmount(t *testing.T) {
+    tests := []struct {
+        name    string
+        in      string
+        want    int64
+        wantErr bool
+    }{
+        {"целое", "42", 42, false},
+        {"пусто", "", 0, true},
+        {"буквы", "abc", 0, true},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            t.Parallel()
+
+            got, err := ParseAmount(tt.in)
+            if (err != nil) != tt.wantErr {
+                t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
+            }
+            if got != tt.want {
+                t.Fatalf("got %d, want %d", got, tt.want)
+            }
+        })
+    }
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Помощник</th><th>Зачем</th></tr></thead>
+      <tbody>
+        <tr><td><code>t.Run</code></td><td>подтест с собственным именем и жизненным циклом</td></tr>
+        <tr><td><code>t.Parallel</code></td><td>разрешить параллельный запуск подтеста</td></tr>
+        <tr><td><code>t.Helper</code></td><td>убрать обёртку из номера строки в отчёте</td></tr>
+        <tr><td><code>t.Cleanup</code></td><td>освобождение после теста, в обратном порядке</td></tr>
+        <tr><td><code>t.TempDir</code></td><td>временный каталог, удаляемый автоматически</td></tr>
+        <tr><td><code>t.Setenv</code></td><td>переменная окружения на время теста</td></tr>
+        <tr><td><code>t.Deadline</code></td><td>дедлайн теста для собственных таймаутов</td></tr>
+        <tr><td><code>TestMain</code></td><td>общая настройка пакета до и после тестов</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Примеры (<code>ExampleXxx</code>) проверяются <code>go test</code>: комментарий <code>// Output:</code> задаёт ожидаемый вывод.</p>
+
+  <pre><code>func ExampleCut() {
+    before, after, _ := strings.Cut("a=b", "=")
+    fmt.Println(before, after)
+    // Output: a b
+}</code></pre>
+</section>
+
+<section id="fuzzing">
+  <h2>5. Fuzzing</h2>
+
+  <p>Fuzz-тест объявляется как <code>FuzzXxx(f *testing.F)</code>. Семена добавляют <code>f.Add</code>, тело проверки — <code>f.Fuzz</code>. Генератор сам подбирает входы, а найденный падающий пример сохраняется в <code>testdata/fuzz</code> и дальше запускается как обычный тест.</p>
+
+  <pre><code>func FuzzParseAmount(f *testing.F) {
+    f.Add("42")
+    f.Add("")
+    f.Add("-7")
+
+    f.Fuzz(func(t *testing.T, s string) {
+        got, err := ParseAmount(s)
+        if err != nil {
+            return
+        }
+        if got &lt; 0 &amp;&amp; !strings.HasPrefix(s, "-") {
+            t.Fatalf("negative result for %q", s)
+        }
+    })
+}</code></pre>
+
+  <pre><code>go test -fuzz=FuzzParseAmount -fuzztime=30s ./...
+go test -run=FuzzParseAmount ./...   # только сохранённые примеры</code></pre>
+
+  <p class="is-muted">За один запуск исполняется один fuzz-таргет. Fuzzing не заменяет примеры и табличные тесты: он ищет неожиданные входы, а не проверяет сценарии.</p>
+</section>
+
+<section id="benchmarks">
+  <h2>6. Бенчмарки</h2>
+
+  <p>Бенчмарк — <code>BenchmarkXxx(b *testing.B)</code>. Каркас вызывает функцию несколько раз, подбирая <code>b.N</code> так, чтобы измерение было устойчивым. Внутри цикла не должно быть подготовки, которую не надо измерять.</p>
+
+  <pre><code>func BenchmarkParseAmount(b *testing.B) {
+    b.ReportAllocs()
+
+    for i := 0; i &lt; b.N; i++ {
+        _, _ = ParseAmount("12345")
+    }
+}
+
+func BenchmarkEncode(b *testing.B) {
+    data := buildPayload()
+    b.ResetTimer()
+
+    for i := 0; i &lt; b.N; i++ {
+        _ = encode(data)
+    }
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Флаг</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>-bench .</code></td><td>запустить все бенчмарки</td></tr>
+        <tr><td><code>-benchmem</code></td><td>показать аллокации и байты на операцию</td></tr>
+        <tr><td><code>-benchtime=5s</code></td><td>длительность измерения</td></tr>
+        <tr><td><code>-count=5</code></td><td>повторить для оценки разброса</td></tr>
+        <tr><td><code>-cpu=1,4</code></td><td>запустить с разным <code>GOMAXPROCS</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>go test -bench . -benchmem -count=5 | tee bench.txt
+benchstat bench.txt</code></pre>
+
+  <p class="is-muted"><code>benchstat</code> — отдельный инструмент <code>golang.org/x/perf/cmd/benchstat</code>; он сравнивает два набора и показывает, значимо ли изменение. Один прогон бенчмарка ничего не доказывает.</p>
+</section>
+
+<section id="static">
+  <h2>7. Статический анализ</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Инструмент</th><th>Что ловит</th></tr></thead>
+      <tbody>
+        <tr><td><code>go vet</code></td><td>типовые ошибки: <code>printf</code>, <code>copylocks</code>, <code>loopclosure</code>, <code>lostcancel</code>, <code>structtag</code>, <code>unreachable</code>, <code>nilfunc</code>, <code>stdversion</code> [1.23], <code>waitgroupgo</code> [1.27], <code>hostport</code> [1.25]</td></tr>
+        <tr><td><code>staticcheck</code></td><td>ошибки (SA), упрощения (S), стиль (ST), быстрые исправления (QF)</td></tr>
+        <tr><td><code>golangci-lint</code></td><td>агрегатор линтеров с единым конфигом <code>.golangci.yml</code></td></tr>
+        <tr><td><code>govulncheck</code></td><td>известные уязвимости в зависимостях и вызовах</td></tr>
+        <tr><td><code>go fix</code></td><td>модернизация кода и API-миграции [1.26]</td></tr>
+        <tr><td><code>gofmt</code>, <code>goimports</code></td><td>форматирование и порядок импортов</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>go vet ./...
+staticcheck ./...
+golangci-lint run ./...
+govulncheck ./...
+gofmt -l .
+go fix ./...</code></pre>
+
+  <p class="is-muted"><code>go vet</code> входит в тулчейн и запускается в <code>go test</code> для части проверок. <code>staticcheck</code> и <code>golangci-lint</code> ставятся отдельно; версия линтера фиксируется в CI, иначе новые правила внезапно ломают сборку.</p>
+</section>
+
+<section id="race">
+  <h2>8. Race detector</h2>
+
+  <p>Детектор гонок встроен в тулчейн и включается флагом <code>-race</code>. Он находит конфликтующие обращения, которые реально произошли во время запуска; ненайденная гонка не означает, что её нет.</p>
+
+  <pre><code>go test -race ./...
+go run -race ./cmd/api
+go build -race -o api-race ./cmd/api</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Свойство</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td>замедление</td><td>в разы; память тоже растёт</td></tr>
+        <tr><td>платформы</td><td>darwin, linux, windows на поддерживаемых архитектурах</td></tr>
+        <tr><td>cgo</td><td>для <code>-race</code> обычно нужен C-тулчейн</td></tr>
+        <tr><td>CI</td><td>отдельный прогон <code>go test -race ./...</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="profiling">
+  <h2>9. Профилирование и отладка</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Инструмент</th><th>Зачем</th></tr></thead>
+      <tbody>
+        <tr><td><code>go test -cpuprofile</code></td><td>профиль CPU из теста или бенчмарка</td></tr>
+        <tr><td><code>go test -memprofile</code></td><td>профиль памяти</td></tr>
+        <tr><td><code>go test -trace</code></td><td>трассировка планировщика и горутин</td></tr>
+        <tr><td><code>go tool pprof</code></td><td>разбор профиля, в том числе в браузере</td></tr>
+        <tr><td><code>go tool trace</code></td><td>временная шкала выполнения</td></tr>
+        <tr><td><code>dlv debug</code>, <code>dlv test</code>, <code>dlv attach</code></td><td>отладчик Delve: точки останова, шаги, переменные</td></tr>
+        <tr><td><code>go tool nm</code>, <code>go tool objdump</code></td><td>символы и дизассемблер</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>go test -bench . -cpuprofile cpu.out -memprofile mem.out
+go tool pprof -http=:8080 cpu.out
+
+dlv debug ./cmd/api
+dlv test ./internal/store</code></pre>
+
+  <p class="is-muted">Профили и трассировку подробно разбирает лист «Рантайм». Здесь важно правило: сначала измерение, потом оптимизация. «На глаз» узкое место находят неверно почти всегда.</p>
+</section>
+
+<section id="build">
+  <h2>10. Сборка и релиз</h2>
+
+  <p>Build constraints задаются директивой <code>//go:build</code> в начале файла; несколько условий объединяются <code>&amp;&amp;</code>, <code>||</code> и <code>!</code>. Флаг <code>-tags</code> включает дополнительные метки.</p>
+
+  <pre><code>//go:build linux &amp;&amp; amd64
+
+package platform
+
+go build -tags=integration ./...</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Флаг</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td><code>-o</code></td><td>имя выходного файла</td></tr>
+        <tr><td><code>-ldflags="-s -w"</code></td><td>убрать таблицы символов и отладочную информацию</td></tr>
+        <tr><td><code>-ldflags="-X main.version=1.2.3"</code></td><td>подставить строковую переменную</td></tr>
+        <tr><td><code>-trimpath</code></td><td>убрать локальные пути из бинарника</td></tr>
+        <tr><td><code>-buildvcs=false</code></td><td>не вшивать информацию VCS</td></tr>
+        <tr><td><code>-race</code></td><td>сборка с детектором гонок</td></tr>
+        <tr><td><code>CGO_ENABLED=0</code></td><td>статическая сборка без cgo</td></tr>
+        <tr><td><code>GOOS</code>, <code>GOARCH</code></td><td>целевая платформа</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>go tool dist list | grep linux
+
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+  go build -trimpath \
+  -ldflags="-s -w -X main.version=$(git describe --tags)" \
+  -o bin/api ./cmd/api</code></pre>
+
+  <p>С Go 1.24 <code>go build</code> сам вшивает версию main-модуля из тега или коммита VCS и добавляет суффикс <code>+dirty</code> при незакоммиченных изменениях. Отключить это можно <code>-buildvcs=false</code>.</p>
+
+  <pre><code>go version -m bin/api</code></pre>
+
+  <p class="is-muted">Для воспроизводимой сборки фиксируют версию Go, зависимости в <code>go.sum</code>, <code>-trimpath</code> и отсутствие локальных <code>replace</code>. <code>go:embed</code> вшивает статические файлы в бинарник; подробности — в листе «Стандартная библиотека».</p>
+</section>
+
+<section id="sources">
+  <h2>11. Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/cmd/go/">go command</a> — все подкоманды и флаги</li>
+    <li><a href="https://go.dev/ref/mod">Go Modules Reference</a> — <code>go.mod</code>, MVS, <code>replace</code>, <code>retract</code>, <code>tool</code></li>
+    <li><a href="https://go.dev/doc/toolchain">Go Toolchains</a> — <code>GOTOOLCHAIN</code>, переключение версий</li>
+    <li><a href="https://go.dev/doc/testing">Testing</a> — тесты, примеры, покрытие</li>
+    <li><a href="https://go.dev/doc/fuzz/">Fuzzing</a> — <code>FuzzXxx</code>, корпус, <code>-fuzztime</code></li>
+    <li><a href="https://pkg.go.dev/testing">pkg.go.dev/testing</a> — <code>T</code>, <code>B</code>, <code>F</code>, <code>Run</code>, <code>Cleanup</code></li>
+    <li><a href="https://pkg.go.dev/cmd/vet">pkg.go.dev/cmd/vet</a> — анализаторы <code>go vet</code></li>
+    <li><a href="https://staticcheck.dev/">staticcheck.dev</a> — проверки SA, S, ST, QF</li>
+    <li><a href="https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck">govulncheck</a> — поиск уязвимостей</li>
+    <li><a href="https://github.com/go-delve/delve">Delve</a> — отладчик</li>
+    <li><a href="https://go.dev/doc/go1.21">Release notes Go 1.21</a> — <code>go</code> как строгий минимум, автоматический выбор тулчейна</li>
+    <li><a href="https://go.dev/doc/go1.24">Release notes Go 1.24</a> — <code>tool</code>-директива, <code>go get -tool</code>, <code>go build -json</code></li>
+    <li><a href="https://go.dev/doc/go1.26">Release notes Go 1.26</a> — переписанный <code>go fix</code></li>
+    <li><a href="https://go.dev/doc/go1.27">Release notes Go 1.27</a> — <code>go mod tidy</code> схлопывает блоки <code>require</code></li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
