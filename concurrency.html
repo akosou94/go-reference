@@ -61,9 +61,501 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>Параллелизм — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead">Горутины, каналы, <code>select</code>, пакет <code>sync</code>, <code>context</code>, модель памяти, паттерны и тестирование конкурентного кода.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из <a href="https://go.dev/ref/mem">модели памяти Go</a>, документации пакетов <a href="https://pkg.go.dev/sync">sync</a> и <a href="https://pkg.go.dev/context">context</a>, <a href="https://go.dev/blog/pipelines">Go Concurrency Patterns: Pipelines and cancellation</a> и release notes. Версия языка — <strong>Go 1.27</strong>.</p>
+  <p>Что появилось когда: <code>sync.OnceFunc</code>, <code>OnceValue</code>, <code>OnceValues</code> — 1.21; <code>sync.WaitGroup.Go</code> — 1.25; <code>testing/synctest</code> — 1.25; профиль утечек горутин — 1.26, экспериментальный.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#goroutines">1. Горутины</a></li>
+    <li><a href="#channels">2. Каналы</a></li>
+    <li><a href="#select">3. select</a></li>
+    <li><a href="#sync">4. sync: мьютексы, WaitGroup, Once, Pool, Map</a></li>
+    <li><a href="#context">5. context</a></li>
+    <li><a href="#memory-model">6. Модель памяти и data race</a></li>
+    <li><a href="#patterns">7. Паттерны</a></li>
+    <li><a href="#errors">8. Ошибки, паника и завершение</a></li>
+    <li><a href="#testing">9. Тестирование конкурентного кода</a></li>
+    <li><a href="#sources">10. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="goroutines">
+  <h2>1. Горутины</h2>
+
+  <p><code>go f(x)</code> запускает вызов <code>f(x)</code> в новой горутине. Сама функция и её аргументы вычисляются в текущей горутине, а <code>go</code> возвращает управление сразу, не дожидаясь завершения. Горутина — не поток ОС: планировщик раскладывает готовые горутины по рабочим потокам.</p>
+
+  <p>У горутины нет идентификатора, её нельзя остановить или дождаться извне. Завершение организуют явно: каналом, <code>sync.WaitGroup</code> или <code>context</code>. Горутина, заблокированная навсегда, — утечка: память под стек и захваченные значения не освобождается.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Понятие</th><th>Что означает</th></tr></thead>
+      <tbody>
+        <tr><td><code>G</code></td><td>горутина: стек, состояние, привязка к <code>M</code></td></tr>
+        <tr><td><code>M</code></td><td>рабочий поток ОС; выполняет код Go, только имея <code>P</code></td></tr>
+        <tr><td><code>P</code></td><td>ресурс выполнения: локальная очередь горутин, кэш аллокатора</td></tr>
+        <tr><td><code>GOMAXPROCS</code></td><td>число <code>P</code>, то есть одновременно выполняемого кода Go</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>По умолчанию <code>GOMAXPROCS</code> равно числу логических CPU. С Go 1.25 на Linux учитывается лимит CPU bandwidth у cgroup, а значение периодически пересчитывается при изменении числа CPU или лимита. Ручная установка через переменную окружения или <code>runtime.GOMAXPROCS</code> отключает оба поведения.</p>
+
+  <pre><code>func main() {
+    var wg sync.WaitGroup
+    for i := 0; i &lt; 3; i++ {
+        wg.Go(func() {           // Go 1.25
+            fmt.Println("горутина", i)
+        })
+    }
+    wg.Wait()
+}</code></pre>
+
+  <p class="is-muted">До Go 1.25 тот же код писали через <code>wg.Add(1)</code>, <code>go func() { defer wg.Done(); … }()</code>. <code>WaitGroup.Go</code> сам делает <code>Add</code> и <code>Done</code>; если функция паникует, паника не глушится.</p>
+</section>
+
+<section id="channels">
+  <h2>2. Каналы</h2>
+
+  <p>Канал — типизированный канал связи между горутинами. Направление можно ограничить в типе: <code>chan T</code>, <code>chan&lt;- T</code> (только отправка), <code>&lt;-chan T</code> (только получение). Закрытие канала — сигнал «значений больше не будет»; закрывает отправитель, а не получатель.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Операция</th><th>nil-канал</th><th>Без буфера</th><th>С буфером</th></tr></thead>
+      <tbody>
+        <tr><td>отправка <code>ch &lt;- v</code></td><td>блокирует навсегда</td><td>ждёт получателя</td><td>ждёт места в буфере</td></tr>
+        <tr><td>получение <code>&lt;-ch</code></td><td>блокирует навсегда</td><td>ждёт отправителя</td><td>ждёт значения или закрытия</td></tr>
+        <tr><td><code>close(ch)</code></td><td>паника</td><td>разрешает получение zero value</td><td>разрешает дочитать буфер</td></tr>
+        <tr><td><code>len(ch)</code> / <code>cap(ch)</code></td><td>0 / 0</td><td>0 / 0</td><td>сколько лежит / ёмкость</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Действие с закрытым каналом</th><th>Результат</th></tr></thead>
+      <tbody>
+        <tr><td>получение <code>v, ok := &lt;-ch</code></td><td>zero value, <code>ok == false</code></td></tr>
+        <tr><td><code>for v := range ch</code></td><td>дочитывает буфер, затем выходит</td></tr>
+        <tr><td>отправка <code>ch &lt;- v</code></td><td>паника</td></tr>
+        <tr><td>повторное <code>close(ch)</code></td><td>паника</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>ch := make(chan int) // без буфера
+go func() {
+    ch &lt;- 42
+    close(ch)
+}()
+
+for v := range ch {
+    fmt.Println(v) // 42
+}
+
+v, ok := &lt;-ch
+fmt.Println(v, ok) // 0 false: канал закрыт</code></pre>
+
+  <p>Буферизованный канал развязывает отправителя и получателя на размер буфера, но не заменяет синхронизацию: переполнение и опустошение снова блокируют. <code>len(ch)</code> — мгновенный снимок, на него нельзя опираться как на условие в конкурентной логике.</p>
+
+  <pre><code>sem := make(chan struct{}, 2) // семафор на два места
+sem &lt;- struct{}{}
+// ...
+&lt;-sem</code></pre>
+</section>
+
+<section id="select">
+  <h2>3. select</h2>
+
+  <p><code>select</code> ждёт одну из операций связи. Если готовы несколько, выбирается одна равномерно псевдослучайно. <code>default</code> выполняется, когда не готова ни одна операция; без <code>default</code> <code>select</code> блокируется. Операции на nil-каналах не готовы никогда, поэтому nil-канал в <code>select</code> выключает ветку.</p>
+
+  <p>При входе в <code>select</code> каналы и правые части отправок вычисляются ровно один раз, в порядке исходного текста. Левые части получающих присваиваний вычисляются только в выбранной ветке.</p>
+
+  <pre><code>select {
+case v := &lt;-ch:
+    fmt.Println("получено", v)
+case ch &lt;- 42:
+    fmt.Println("отправлено")
+case &lt;-ctx.Done():
+    return ctx.Err()
+default:
+    fmt.Println("ничего не готово")
+}</code></pre>
+
+  <p>Таймаут на один шаг:</p>
+
+  <pre><code>select {
+case v := &lt;-ch:
+    return v, nil
+case &lt;-time.After(2 * time.Second):
+    return 0, errors.New("timeout")
+}</code></pre>
+
+  <p class="is-muted"><code>time.After</code> создаёт таймер, который сработает даже если ветка не выбрана. В цикле и на горячем пути предпочтительнее <code>context.WithTimeout</code> с явным <code>cancel</code> или переиспользуемый <code>time.Timer</code>.</p>
+</section>
+
+<section id="sync">
+  <h2>4. sync: мьютексы, WaitGroup, Once, Pool, Map</h2>
+
+  <p>Пакет <code>sync</code> даёт низкоуровневые примитивы. Его собственные типы нельзя копировать после первого использования, а нулевое значение большинства из них готово к работе.</p>
+
+  <h3 id="mutex">Mutex и RWMutex</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Тип</th><th>Что делает</th><th>Когда брать</th></tr></thead>
+      <tbody>
+        <tr><td><code>sync.Mutex</code></td><td>взаимное исключение: <code>Lock</code>, <code>Unlock</code>, <code>TryLock</code></td><td>короткая критическая секция, общий инвариант</td></tr>
+        <tr><td><code>sync.RWMutex</code></td><td>много читателей или один писатель</td><td>чтений заметно больше, чем записей</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Мьютекс не привязан к горутине: заблокировать может одна, разблокировать — другая. Повторный <code>Lock</code> из той же горутины даёт deadlock: мьютекс не реентерабельный. <code>Unlock</code> незаблокированного мьютекса — ошибка времени выполнения.</p>
+
+  <pre><code>type Counter struct {
+    mu sync.Mutex
+    n  int
+}
+
+func (c *Counter) Inc() {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    c.n++
+}
+
+func (c *Counter) Value() int {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    return c.n
+}</code></pre>
+
+  <h3 id="waitgroup">WaitGroup</h3>
+  <p><code>Add</code> увеличивает счётчик, <code>Done</code> уменьшает, <code>Wait</code> блокируется до нуля. Положительный <code>Add</code> при нулевом счётчике должен произойти до <code>Wait</code>; иначе <code>Wait</code> может вернуться раньше. Отрицательный счётчик — паника.</p>
+
+  <pre><code>var wg sync.WaitGroup
+for _, url := range urls {
+    wg.Go(func() { fetch(url) }) // Go 1.25: Add + Done внутри
+}
+wg.Wait()</code></pre>
+
+  <h3 id="once">Once и OnceFunc</h3>
+  <p><code>Once.Do(f)</code> выполняет <code>f</code> ровно один раз; остальные вызовы ждут завершения первого. Если <code>f</code> паникует, <code>Do</code> считает её завершённой и больше не вызывает. С Go 1.21 есть обёртки <code>OnceFunc</code>, <code>OnceValue</code>, <code>OnceValues</code>: они возвращают функцию, которая кэширует результат и повторяет панику при каждом вызове.</p>
+
+  <pre><code>var loadConfig = sync.OnceValue(func() *Config {
+    cfg, err := readConfig()
+    if err != nil {
+        panic(err)
+    }
+    return cfg
+})
+
+cfg := loadConfig() // чтение один раз, дальше — кэш</code></pre>
+
+  <h3 id="pool">Pool</h3>
+  <p><code>Pool</code> — набор временных объектов для повторного использования, чтобы снизить давление на GC. Любой элемент может быть удалён в любой момент без уведомления; <code>Pool</code> не является кэшем и не подходит для долгоживущих объектов.</p>
+
+  <pre><code>var bufPool = sync.Pool{
+    New: func() any { return new(bytes.Buffer) },
+}
+
+b := bufPool.Get().(*bytes.Buffer)
+b.Reset()
+defer bufPool.Put(b)</code></pre>
+
+  <h3 id="sync-map">Map</h3>
+  <p><code>sync.Map</code> специализирован: документация рекомендует обычную мапу с отдельной блокировкой, а <code>sync.Map</code> — для двух случаев: запись по ключу происходит один раз, а чтений много; либо горутины работают с непересекающимися наборами ключей. Нулевое значение готово к использованию.</p>
+
+  <pre><code>var cache sync.Map
+
+cache.Store("key", 42)
+v, ok := cache.Load("key")
+cache.Delete("key")</code></pre>
+
+  <h3 id="cond-atomic">Cond и atomic</h3>
+  <p><code>sync.Cond</code> — переменная условия с <code>Wait</code>, <code>Signal</code>, <code>Broadcast</code>; для большинства задач каналы проще. Пакет <code>sync/atomic</code> даёт атомарные операции и типизированные обёртки <code>atomic.Int64</code>, <code>atomic.Bool</code>, <code>atomic.Pointer[T]</code>: они безопасны для конкурентного доступа без мьютекса.</p>
+
+  <pre><code>var hits atomic.Int64
+hits.Add(1)
+fmt.Println(hits.Load())</code></pre>
+</section>
+
+<section id="context">
+  <h2>5. context</h2>
+
+  <p><code>context.Context</code> несёт дедлайн, сигнал отмены и значения, ограниченные временем жизни запроса. Контекст образует дерево: отмена родителя отменяет всех потомков.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Функция</th><th>Что создаёт</th></tr></thead>
+      <tbody>
+        <tr><td><code>context.Background()</code></td><td>корневой контекст; не отменяется и не имеет дедлайна</td></tr>
+        <tr><td><code>context.TODO()</code></td><td>заглушка, когда контекст ещё не определён</td></tr>
+        <tr><td><code>WithCancel(parent)</code></td><td>дочерний контекст и <code>CancelFunc</code></td></tr>
+        <tr><td><code>WithTimeout(parent, d)</code></td><td>отмена через <code>d</code></td></tr>
+        <tr><td><code>WithDeadline(parent, t)</code></td><td>отмена в момент <code>t</code></td></tr>
+        <tr><td><code>WithValue(parent, key, val)</code></td><td>значение, привязанное к контексту</td></tr>
+        <tr><td><code>WithCancelCause(parent)</code></td><td>отмена с причиной; причина читается через <code>context.Cause</code></td></tr>
+        <tr><td><code>WithDeadlineCause</code>, <code>WithTimeoutCause</code></td><td>дедлайн или таймаут с причиной</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Правила из документации пакета: не хранить контекст в структуре, а передавать первым параметром <code>ctx</code>; не передавать <code>nil</code> — есть <code>TODO</code>; использовать значения только для данных уровня запроса, а не для необязательных параметров функции. <code>CancelFunc</code> нужно вызывать на всех путях: иначе дочерний контекст и его таймер живут до отмены родителя.</p>
+
+  <pre><code>func (s *Service) GetUser(ctx context.Context, id int) (*User, error) {
+    ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+    defer cancel()
+
+    row := s.db.QueryRowContext(ctx, "select id, name from users where id = $1", id)
+    var u User
+    if err := row.Scan(&amp;u.ID, &amp;u.Name); err != nil {
+        return nil, fmt.Errorf("get user %d: %w", id, err)
+    }
+    return &amp;u, nil
+}</code></pre>
+
+  <p><code>ctx.Done()</code> закрывается при отмене; <code>ctx.Err()</code> возвращает <code>context.Canceled</code> или <code>context.DeadlineExceeded</code>. Значение, положенное через <code>WithValue</code>, должно быть сравнимо и не должно быть встроенного типа: ключи-строки легко collide между пакетами, поэтому ключ объявляют собственным типом.</p>
+</section>
+
+<section id="memory-model">
+  <h2>6. Модель памяти и data race</h2>
+
+  <p>Data race — это запись в ячейку памяти, происходящая одновременно с другим чтением или записью той же ячейки, если все эти обращения не атомарны. Программа без гонок ведёт себя так, как будто все горутины выполнялись на одном процессоре: это свойство называется DRF-SC (data-race-free — sequentially consistent).</p>
+
+  <p class="is-muted">Дословно: «A data race is defined as a write to a memory location happening concurrently with another read or write to that same location, unless all the accesses involved are atomic data accesses as provided by the sync/atomic package.» · «In the absence of data races, Go programs behave as if all the goroutines were multiplexed onto a single processor.»</p>
+
+  <p>Отношение <em>happens before</em> задаёт, какие записи видны чтению. Оно возникает, например, при отправке и приёме по каналу, при <code>Unlock</code> и последующем <code>Lock</code>, при <code>Once.Do</code>, <code>WaitGroup.Wait</code> и атомарных операциях. Без такого ребра два обращения не упорядочены, и результат не определён.</p>
+
+  <pre><code>var counter int
+var wg sync.WaitGroup
+
+for i := 0; i &lt; 100; i++ {
+    wg.Go(func() { counter++ }) // data race
+}
+wg.Wait()</code></pre>
+
+  <p>Гонку находит детектор: <code>go test -race</code>, <code>go run -race</code>, <code>go build -race</code>. Он видит только реально исполненные обращения, поэтому тест должен задевать конкурентный путь. Детектор замедляет программу и увеличивает расход памяти.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Средство</th><th>Что упорядочивает</th></tr></thead>
+      <tbody>
+        <tr><td>канал</td><td>отправка happens before приёма этого значения</td></tr>
+        <tr><td><code>Mutex</code></td><td><code>Unlock</code> happens before последующего <code>Lock</code></td></tr>
+        <tr><td><code>RWMutex</code></td><td><code>Unlock</code> писателя before <code>Lock</code>/<code>RLock</code>; <code>RUnlock</code> before <code>Lock</code></td></tr>
+        <tr><td><code>Once</code></td><td>возврат из <code>Do(f)</code> before возврата любого другого <code>Do(f)</code></td></tr>
+        <tr><td><code>WaitGroup</code></td><td><code>Done</code> before возврата <code>Wait</code></td></tr>
+        <tr><td><code>atomic</code></td><td>атомарная операция не создаёт гонки; порядок задаётся правилами пакета</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">Атомарность не заменяет мьютекс автоматически: несколько атомарных полей не образуют одну транзакцию. Если инвариант охватывает больше одной переменной, нужен мьютекс.</p>
+</section>
+
+<section id="patterns">
+  <h2>7. Паттерны</h2>
+
+  <h3 id="worker-pool">Worker pool</h3>
+  <p>Фиксированное число горутин читает задачи из общего канала. Закрытие канала задач — сигнал рабочим завершиться; закрытие канала результатов делает отдельная горутина после <code>Wait</code>.</p>
+
+  <pre><code>func process(ctx context.Context, items []Item) ([]Result, error) {
+    jobs := make(chan Item)
+    results := make(chan Result)
+
+    var wg sync.WaitGroup
+    for i := 0; i &lt; 4; i++ {
+        wg.Go(func() {
+            for item := range jobs {
+                results &lt;- processItem(item)
+            }
+        })
+    }
+
+    go func() {
+        defer close(jobs)
+        for _, item := range items {
+            select {
+            case jobs &lt;- item:
+            case &lt;-ctx.Done():
+                return
+            }
+        }
+    }()
+
+    go func() {
+        wg.Wait()
+        close(results)
+    }()
+
+    var out []Result
+    for r := range results {
+        out = append(out, r)
+    }
+    return out, ctx.Err()
+}</code></pre>
+
+  <h3 id="pipeline">Pipeline</h3>
+  <p>Стадии соединяются каналами: каждая читает из входного канала и пишет в выходной. Отмена передаётся через <code>ctx.Done()</code>, иначе ранний выход получателя оставит отправителей заблокированными навсегда.</p>
+
+  <pre><code>func gen(ctx context.Context, nums ...int) &lt;-chan int {
+    out := make(chan int)
+    go func() {
+        defer close(out)
+        for _, n := range nums {
+            select {
+            case out &lt;- n:
+            case &lt;-ctx.Done():
+                return
+            }
+        }
+    }()
+    return out
+}
+
+func square(ctx context.Context, in &lt;-chan int) &lt;-chan int {
+    out := make(chan int)
+    go func() {
+        defer close(out)
+        for n := range in {
+            select {
+            case out &lt;- n * n:
+            case &lt;-ctx.Done():
+                return
+            }
+        }
+    }()
+    return out
+}</code></pre>
+
+  <h3 id="errgroup">errgroup</h3>
+  <p><code>golang.org/x/sync/errgroup</code> — группа горутин с первой ошибкой и общим контекстом. <code>WithContext</code> отменяет контекст при первой ошибке, <code>SetLimit</code> ограничивает число одновременных горутин, <code>TryGo</code> запускает только если есть свободное место.</p>
+
+  <pre><code>g, ctx := errgroup.WithContext(ctx)
+g.SetLimit(4)
+
+for _, u := range urls {
+    g.Go(func() error {
+        return fetch(ctx, u)
+    })
+}
+return g.Wait()</code></pre>
+
+  <h3 id="fan">Fan-out, fan-in, семафор</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Паттерн</th><th>Из чего состоит</th></tr></thead>
+      <tbody>
+        <tr><td>fan-out</td><td>несколько горутин читают один входной канал</td></tr>
+        <tr><td>fan-in</td><td>несколько входных каналов сводятся в один; на каждый вход — своя горутина</td></tr>
+        <tr><td>семафор</td><td>буферизованный канал: отправка занимает место, приём освобождает</td></tr>
+        <tr><td>or-done</td><td><code>select</code> на рабочий канал и <code>ctx.Done()</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="errors">
+  <h2>8. Ошибки, паника и завершение</h2>
+
+  <p>Паника в любой горутине завершает всю программу, а не только эту горутину. <code>recover</code> работает только в отложенной функции той горутины, где случилась паника; из <code>Wait</code> или родительской горутины её не поймать.</p>
+
+  <pre><code>go func() {
+    defer func() {
+        if r := recover(); r != nil {
+            log.Printf("panic: %v", r)
+        }
+    }()
+    work()
+}()</code></pre>
+
+  <p>Первая ошибка из группы горутин обычно возвращается через <code>errgroup</code>; несколько независимых ошибок можно собрать <code>errors.Join</code>. Отмена — это не ошибка сама по себе: <code>context.Canceled</code> часто означает штатное завершение по запросу клиента.</p>
+
+  <pre><code>g, ctx := errgroup.WithContext(ctx)
+for _, shard := range shards {
+    g.Go(func() error {
+        return syncShard(ctx, shard)
+    })
+}
+if err := g.Wait(); err != nil {
+    return fmt.Errorf("sync: %w", err)
+}</code></pre>
+
+  <p>Завершение сервиса: <code>signal.NotifyContext</code> превращает сигнал в отмену контекста, затем <code>http.Server.Shutdown</code> ждёт активные запросы. Подробности — в листе «HTTP-сервис».</p>
+
+  <pre><code>ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+defer stop()
+
+go func() { _ = srv.ListenAndServe() }()
+&lt;-ctx.Done()
+
+shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+_ = srv.Shutdown(shutdownCtx)</code></pre>
+</section>
+
+<section id="testing">
+  <h2>9. Тестирование конкурентного кода</h2>
+
+  <p>Основной инструмент — детектор гонок: <code>go test -race ./...</code>. Он не доказывает отсутствие гонок, но находит исполненные. Тесты с <code>time.Sleep</code> хрупкие: они зависят от планировщика и загрузки машины.</p>
+
+  <p>С Go 1.25 пакет <code>testing/synctest</code> запускает тест в изолированном «пузыре» с виртуальным временем. Пока все горутины пузыря заблокированы, время перескакивает к следующему таймеру; <code>synctest.Wait</code> ждёт, пока все горутины пузыря окажутся в состоянии, из которого их может разбудить только внешнее событие.</p>
+
+  <pre><code>func TestTimeout(t *testing.T) {
+    synctest.Test(t, func(t *testing.T) {
+        ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+        defer cancel()
+
+        synctest.Sleep(2 * time.Minute) // виртуальное время
+
+        if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+            t.Fatalf("ctx.Err() = %v", ctx.Err())
+        }
+    })
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Инструмент</th><th>Что проверяет</th></tr></thead>
+      <tbody>
+        <tr><td><code>go test -race</code></td><td>гонки данных в исполненных путях</td></tr>
+        <tr><td><code>testing/synctest</code></td><td>конкурентный код с виртуальным временем, без реальных задержек</td></tr>
+        <tr><td><code>go vet</code></td><td><code>copylocks</code>: копирование мьютексов и <code>WaitGroup</code></td></tr>
+        <tr><td><code>runtime/pprof</code>, профиль <code>goroutineleak</code></td><td>заблокированные горутины; профиль экспериментальный, включается <code>GOEXPERIMENT=goroutineleakprofile</code></td></tr>
+        <tr><td><code>-count</code>, <code>-shuffle</code></td><td>повторяемость и другой порядок тестов</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="sources">
+  <h2>10. Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/ref/mem">The Go Memory Model</a> — data race, happens before, DRF-SC</li>
+    <li><a href="https://go.dev/ref/spec#Channel_types">Спецификация: Channel types</a> — отправка, приём, закрытие, nil-канал</li>
+    <li><a href="https://go.dev/ref/spec#Select_statements">Спецификация: Select statements</a> — случайный выбор готовой ветки</li>
+    <li><a href="https://pkg.go.dev/sync">pkg.go.dev/sync</a> — Mutex, RWMutex, WaitGroup, Once, Pool, Map, Cond</li>
+    <li><a href="https://pkg.go.dev/sync/atomic">pkg.go.dev/sync/atomic</a> — атомарные операции и типизированные обёртки</li>
+    <li><a href="https://pkg.go.dev/context">pkg.go.dev/context</a> — правила передачи контекста, отмена, причины</li>
+    <li><a href="https://go.dev/blog/pipelines">Go Concurrency Patterns: Pipelines and cancellation</a> — стадии, fan-out, fan-in, отмена</li>
+    <li><a href="https://go.dev/blog/context">Go Concurrency Patterns: Context</a> — контекст в сервере</li>
+    <li><a href="https://pkg.go.dev/golang.org/x/sync/errgroup">pkg.go.dev/golang.org/x/sync/errgroup</a> — группа горутин с первой ошибкой</li>
+    <li><a href="https://pkg.go.dev/testing/synctest">pkg.go.dev/testing/synctest</a> — виртуальное время в тестах</li>
+    <li><a href="https://go.dev/doc/go1.25">Release notes Go 1.25</a> — <code>WaitGroup.Go</code>, container-aware <code>GOMAXPROCS</code>, <code>synctest</code></li>
+    <li><a href="https://go.dev/doc/go1.26">Release notes Go 1.26</a> — экспериментальный профиль <code>goroutineleak</code></li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>
