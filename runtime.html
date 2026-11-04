@@ -61,9 +61,333 @@
 <header class="reference-header">
   <p class="reference-meta">Справочник</p>
   <h1>Рантайм — справочник</h1>
-  <p class="lead">Лист ещё не собран.</p>
+  <p class="lead">Планировщик G-M-P, стеки горутин, аллокатор, сборка мусора, <code>GOGC</code> и <code>GOMEMLIMIT</code>, escape analysis, <code>pprof</code> и диагностика.</p>
   <p class="reference-sub"><a href="./index.html">Все справочники</a></p>
 </header>
+
+<div class="callout callout--info">
+  <p>Собрано из <a href="https://go.dev/doc/gc-guide">A Guide to the Go Garbage Collector</a>, <a href="https://go.dev/doc/diagnostics">Diagnostics</a>, <a href="https://go.dev/blog/pprof">Profiling Go Programs</a>, комментариев в исходниках рантайма Go 1.27 и release notes.</p>
+</div>
+
+<nav id="toc" aria-label="Разделы страницы">
+  <h2>Оглавление</h2>
+  <div class="refsearch">
+    <input type="search" id="refSearch" placeholder="Поиск по странице…" autocomplete="off" aria-label="Поиск по странице">
+    <p class="refsearch__status" id="refSearchStatus" role="status"></p>
+    <ul id="refSearchResults" class="refsearch__results" hidden></ul>
+  </div>
+  <ul>
+    <li><a href="#binary">1. Бинарник и рантайм</a></li>
+    <li><a href="#scheduler">2. Планировщик: G, M, P</a></li>
+    <li><a href="#stacks">3. Стеки горутин</a></li>
+    <li><a href="#allocator">4. Аллокатор памяти</a></li>
+    <li><a href="#gc">5. Сборка мусора</a></li>
+    <li><a href="#gc-tuning">6. GOGC и GOMEMLIMIT</a></li>
+    <li><a href="#escape">7. Escape analysis</a></li>
+    <li><a href="#pprof">8. Профилирование</a></li>
+    <li><a href="#diagnostics">9. Диагностика</a></li>
+    <li><a href="#sources">10. Первоисточники</a></li>
+  </ul>
+</nav>
+
+<section id="binary">
+  <h2>1. Бинарник и рантайм</h2>
+
+  <p><code>go build</code> собирает исполняемый файл, в который уже включён рантайм: виртуальной машины и JIT нет. Рантайм даёт планировщик горутин, сборщик мусора, аллокатор, реализацию каналов и мап, отражение, паники и трассировки.</p>
+
+  <p>Без cgo бинарник статический: его можно перенести на машину без Go и без системных библиотек. С cgo появляется динамическая зависимость от libc. Кросс-компиляция задаётся <code>GOOS</code> и <code>GOARCH</code>, например <code>GOOS=linux GOARCH=amd64 go build</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Что входит в бинарник</th><th>Зачем</th></tr></thead>
+      <tbody>
+        <tr><td>код программы</td><td>пакеты и <code>main</code></td></tr>
+        <tr><td>рантайм</td><td>планировщик, GC, аллокатор, каналы, отражение</td></tr>
+        <tr><td>таблицы типов и метаданные</td><td>интерфейсы, отражение, трассировки</td></tr>
+        <tr><td>отладочная информация</td><td>имена функций и строки; убирается <code>-ldflags="-s -w"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">Пустая программа на Go всё равно весит мегабайты: рантайм и метаданные входят в каждый бинарник. <code>CGO_ENABLED=0</code> фиксирует статическую сборку.</p>
+</section>
+
+<section id="scheduler">
+  <h2>2. Планировщик: G, M, P</h2>
+
+  <p>Планировщик распределяет готовые к выполнению горутины по рабочим потокам. Три сущности: <code>G</code> — горутина, <code>M</code> — рабочий поток ОС, <code>P</code> — ресурс, необходимый для выполнения кода Go. Поток <code>M</code> выполняет код Go, только пока владеет <code>P</code>; в системном вызове он может отдать <code>P</code> другому потоку.</p>
+
+  <p class="is-muted">Дословно из <code>runtime/proc.go</code>: «G - goroutine. M - worker thread, or machine. P - processor, a resource that is required to execute Go code. M must have an associated P to execute Go code, however it can be blocked or in a syscall w/o an associated P.»</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Механизм</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td>локальная очередь <code>P</code></td><td>готовые горутины, которые создал или разбудил этот <code>P</code></td></tr>
+        <tr><td>глобальная очередь</td><td>общая очередь, когда локальная переполнена</td></tr>
+        <tr><td>work stealing</td><td>простаивающий <code>P</code> забирает часть работы у другого</td></tr>
+        <tr><td>sysmon</td><td>фоновый монитор: таймеры, вытеснение, возврат занятых <code>P</code></td></tr>
+        <tr><td>netpoller</td><td>горутины, ждущие сеть, паркуются и будятся по готовности</td></tr>
+        <tr><td>асинхронное вытеснение</td><td>долгая горутина прерывается сигналом, а не только в точках вызова</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>GOMAXPROCS</code> задаёт число <code>P</code>, то есть сколько кода Go может выполняться одновременно. С Go 1.25 на Linux учитывается лимит CPU bandwidth у cgroup, и значение периодически пересчитывается; ручная установка это отключает.</p>
+
+  <pre><code>fmt.Println(runtime.NumCPU())        // логические CPU
+fmt.Println(runtime.GOMAXPROCS(0))   // текущее значение, без изменения
+runtime.Gosched()                    // уступить процессор другим горутинам</code></pre>
+
+  <p class="is-muted">Горутина, заблокированная на канале, мьютексе или сети, не занимает поток ОС: она паркуется, а <code>M</code> берёт другую работу. Число потоков ОС может превышать <code>GOMAXPROCS</code>, например из-за системных вызовов и cgo.</p>
+</section>
+
+<section id="stacks">
+  <h2>3. Стеки горутин</h2>
+
+  <p>Горутина начинает с маленького стека: <code>stackMin = 2048</code> байт в исходниках рантайма. Стек растёт по мере надобности: рантайм выделяет новый участок, копирует туда содержимое и правит указатели. Поэтому адрес локальной переменной не стабилен между вызовами, а указатели на стек не передаются наружу.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td>начальный стек</td><td>2 КиБ</td></tr>
+        <tr><td>максимальный стек, 64-бит</td><td>1 ГБ</td></tr>
+        <tr><td>максимальный стек, 32-бит</td><td>250 МБ</td></tr>
+        <tr><td>изменение лимита</td><td><code>debug.SetMaxStack</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>buf := make([]byte, 1&lt;&lt;20)
+n := runtime.Stack(buf, false) // стек текущей горутины
+fmt.Println(string(buf[:n]))
+
+n = runtime.Stack(buf, true)   // стеки всех горутин</code></pre>
+
+  <p class="is-muted">Глубокую рекурсию в Go ограничивает не размер стека по умолчанию, а лимит в 1 ГБ: превышение даёт фатальную ошибку <code>goroutine stack exceeds 1000000000-byte limit</code>.</p>
+</section>
+
+<section id="allocator">
+  <h2>4. Аллокатор памяти</h2>
+
+  <p>Аллокатор работает страницами по 8192 байта. Маленькие объекты (до 32 КиБ) округляются до одного из примерно 70 классов размеров; каждая страница делится на объекты одного класса и управляется битовой картой свободных мест.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Структура</th><th>Роль</th></tr></thead>
+      <tbody>
+        <tr><td><code>mspan</code></td><td>непрерывный участок страниц, нарезанный на объекты одного класса</td></tr>
+        <tr><td><code>mcache</code></td><td>кэш <code>mspan</code> у каждого <code>P</code>; мелкие аллокации идут без блокировки</td></tr>
+        <tr><td><code>mcentral</code></td><td>списки <code>mspan</code> нужного класса с свободными местами</td></tr>
+        <tr><td><code>mheap</code></td><td>куча: страницы и крупные объекты</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Мелкий объект берётся из <code>mcache</code> текущего <code>P</code>. Если в <code>mspan</code> нет свободных мест, <code>P</code> получает новый <code>mspan</code> у <code>mcentral</code>; если и там пусто — у <code>mheap</code>; если куча пуста, рантайм запрашивает у ОС участок не меньше 1 МиБ. Крупные объекты идут напрямую в <code>mheap</code>, минуя кэши. Объекты без указателей и меньше 16 байт обслуживает tiny-аллокатор: несколько мелких значений пакуются в один блок.</p>
+
+  <p class="is-muted">С Go 1.27 компилятор генерирует вызовы специализированных по размеру аллокаторов: мелкие выделения (меньше 80 байт) ускорились до 30%, бинарник вырос примерно на 60 КиБ.</p>
+
+  <pre><code>var m runtime.MemStats
+runtime.ReadMemStats(&amp;m)
+fmt.Println(m.HeapAlloc, m.HeapSys, m.NumGC)</code></pre>
+</section>
+
+<section id="gc">
+  <h2>5. Сборка мусора</h2>
+
+  <p>GC в Go — конкурентная mark-sweep сборка с write barrier. Она не перемещает объекты и не делит их на поколения; аллокация идёт через раздельные по <code>P</code> кэши.</p>
+
+  <p class="is-muted">Дословно из <code>runtime/mgc.go</code>: «It is a concurrent mark and sweep that uses a write barrier. It is non-generational and non-compacting. Allocation is done using size segregated per P allocation caches.»</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Фаза</th><th>Что происходит</th><th>Останавливает мир</th></tr></thead>
+      <tbody>
+        <tr><td>sweep termination</td><td>завершается разметка предыдущего цикла, включается write barrier</td><td>да, коротко</td></tr>
+        <tr><td>mark</td><td>обход достижимых объектов параллельно с программой</td><td>нет</td></tr>
+        <tr><td>mark termination</td><td>доразметка корней, выключение write barrier</td><td>да, коротко</td></tr>
+        <tr><td>sweep</td><td>освобождение неотмеченных объектов, часто лениво при аллокации</td><td>нет</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Разметка трёхцветная: белые объекты ещё не встречены, серые поставлены в очередь, чёрные просканированы. Write barrier при записи указателя в чёрный объект «затеняет» новую цель, чтобы чёрный объект не начал ссылаться на белый и тот не был ошибочно освобождён.</p>
+
+  <p>Корни — стеки горутин, глобальные переменные и регистры. Пока цикл разметки идёт, горутина, которая много аллоцирует, помогает GC: это называется GC assist. Стоимость сборки — процессорное время и задержки, а не только паузы.</p>
+</section>
+
+<section id="gc-tuning">
+  <h2>6. GOGC и GOMEMLIMIT</h2>
+
+  <p><code>GOGC</code> задаёт целевой размер кучи после цикла. При значении 100 цель — удвоить живую кучу с корнями; чем больше <code>GOGC</code>, тем реже сборки и тем больше памяти. Формула из руководства:</p>
+
+  <pre><code>Target heap memory = Live heap + (Live heap + GC roots) * GOGC / 100</code></pre>
+
+  <p>Пример: живая куча 8 МиБ, стеки 1 МиБ, глобальные указатели 1 МиБ. При <code>GOGC=100</code> до следующей сборки можно выделить ещё 10 МиБ; при 50 — 5 МиБ; при 200 — 20 МиБ. Удвоение <code>GOGC</code> удваивает память и примерно вдвое снижает процессорную стоимость GC.</p>
+
+  <p><code>GOMEMLIMIT</code> (Go 1.19) задаёт мягкий предел памяти рантайма: <code>Sys - HeapReleased</code>, или <code>/memory/classes/total:bytes - /memory/classes/heap/released:bytes</code> в терминах <code>runtime/metrics</code>. Это не жёсткий лимит: рантайм стремится уложиться, но при нехватке памяти программа всё равно может получить OOM.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Настройка</th><th>Переменная</th><th>API</th></tr></thead>
+      <tbody>
+        <tr><td>цель кучи</td><td><code>GOGC</code></td><td><code>debug.SetGCPercent</code></td></tr>
+        <tr><td>отключить GC</td><td><code>GOGC=off</code></td><td><code>debug.SetGCPercent(-1)</code></td></tr>
+        <tr><td>мягкий предел памяти</td><td><code>GOMEMLIMIT</code></td><td><code>debug.SetMemoryLimit</code></td></tr>
+        <tr><td>принудительный цикл</td><td>—</td><td><code>runtime.GC</code></td></tr>
+        <tr><td>вернуть память ОС</td><td>—</td><td><code>debug.FreeOSMemory</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>import "runtime/debug"
+
+debug.SetGCPercent(200)                     // реже сборки, больше памяти
+debug.SetMemoryLimit(512 &lt;&lt; 20)              // мягкий предел 512 МиБ
+debug.SetGCPercent(-1)                      // GC выключен
+
+// в тестах и на старте удобно смотреть циклы:
+// GODEBUG=gctrace=1 ./app</code></pre>
+</section>
+
+<section id="escape">
+  <h2>7. Escape analysis</h2>
+
+  <p>Компилятор решает, где жить значению: на стеке или в куче. Если значение не выходит за пределы функции и его адрес не сохраняется, оно остаётся на стеке. Если «убегает» — компилятор выделяет его в куче, и дальше им занимается GC.</p>
+
+  <p>Проверить решение компилятора: <code>go build -gcflags=-m ./...</code>. Флаг <code>-m -m</code> печатает больше причин. Строка <code>escapes to heap</code> означает, что значение ушло в кучу.</p>
+
+  <pre><code>type Point struct{ X, Y int }
+
+func NewPoint() *Point {
+    return &amp;Point{} // escapes to heap: указатель возвращается наружу
+}
+
+func Sum() int {
+    p := Point{X: 1, Y: 2} // не escapes: p не покидает функцию
+    return p.X + p.Y
+}</code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Причина</th><th>Пример</th></tr></thead>
+      <tbody>
+        <tr><td>возврат указателя</td><td><code>return &amp;v</code></td></tr>
+        <tr><td>упаковка в интерфейс</td><td><code>var anyV any = v</code></td></tr>
+        <tr><td>захват замыканием, которое живёт дольше</td><td><code>func() { use(v) }</code>, сохранённая в поле</td></tr>
+        <tr><td>отправка в канал</td><td><code>ch &lt;- v</code></td></tr>
+        <tr><td>запись в глобальную переменную</td><td><code>global = &amp;v</code></td></tr>
+        <tr><td>слишком большой объект</td><td>размер известен, но превышает лимит стека</td></tr>
+        <tr><td>неизвестный размер</td><td><code>make([]T, n)</code> с переменным <code>n</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="is-muted">Escape analysis — оптимизация, а не контракт: полагаться на конкретное решение компилятора нельзя. Если аллокаций слишком много, их ищут профилем кучи, а не догадками.</p>
+</section>
+
+<section id="pprof">
+  <h2>8. Профилирование</h2>
+
+  <p><code>runtime/pprof</code> отдаёт данные в формате, который понимает <code>go tool pprof</code>. Профиль можно снять в тесте, включить HTTP-эндпоинтами или собрать вручную.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Профиль</th><th>Что показывает</th><th>Как включить</th></tr></thead>
+      <tbody>
+        <tr><td><code>cpu</code></td><td>где программа тратит процессорное время</td><td><code>go test -cpuprofile</code>, <code>pprof.StartCPUProfile</code></td></tr>
+        <tr><td><code>heap</code></td><td>выделения и текущая память</td><td><code>go test -memprofile</code>, <code>pprof.WriteHeapProfile</code></td></tr>
+        <tr><td><code>goroutine</code></td><td>стеки всех текущих горутин</td><td>всегда доступен</td></tr>
+        <tr><td><code>threadcreate</code></td><td>создание потоков ОС</td><td>всегда доступен</td></tr>
+        <tr><td><code>block</code></td><td>блокировки на примитивах синхронизации</td><td><code>runtime.SetBlockProfileRate</code></td></tr>
+        <tr><td><code>mutex</code></td><td>конкуренция за мьютексы</td><td><code>runtime.SetMutexProfileFraction</code></td></tr>
+        <tr><td><code>goroutineleak</code></td><td>горутины, заблокированные навсегда</td><td>общедоступен с Go 1.27</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>import (
+    "log"
+    "net/http"
+    _ "net/http/pprof"
+)
+
+func main() {
+    go func() {
+        log.Println(http.ListenAndServe("localhost:6060", nil))
+    }()
+    // ...
+}</code></pre>
+
+  <p>Снятие и разбор:</p>
+
+  <pre><code>go test -bench . -cpuprofile cpu.out -memprofile mem.out
+go tool pprof -http=:8080 cpu.out
+go tool pprof -alloc_space mem.out   # все выделения
+go tool pprof -inuse_space mem.out   # что живо сейчас</code></pre>
+
+  <p><code>go tool trace</code> показывает не агрегаты, а временную шкалу: когда горутины выполнялись, блокировались, ждали GC и сеть. Трассировка полезна для задержек, профиль — для стоимости.</p>
+
+  <pre><code>go test -trace trace.out
+go tool trace trace.out</code></pre>
+
+  <p class="is-muted">Профилирование в production допустимо, но CPU-профиль добавляет накладные расходы. Block- и mutex-профили по умолчанию выключены, потому что сами стоят производительности.</p>
+</section>
+
+<section id="diagnostics">
+  <h2>9. Диагностика</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Инструмент</th><th>Что даёт</th></tr></thead>
+      <tbody>
+        <tr><td><code>GODEBUG=gctrace=1</code></td><td>событие каждой сборки: объём, паузы</td></tr>
+        <tr><td><code>GODEBUG=schedtrace=X</code></td><td>состояние планировщика каждые X мс</td></tr>
+        <tr><td><code>GODEBUG=inittrace=1</code></td><td>время и аллокации инициализации пакетов</td></tr>
+        <tr><td><code>runtime/metrics</code></td><td>стабильные именованные метрики рантайма</td></tr>
+        <tr><td><code>runtime.ReadMemStats</code></td><td>снимок памяти и числа сборок</td></tr>
+        <tr><td><code>expvar</code></td><td>публикация переменных через HTTP в JSON</td></tr>
+        <tr><td><code>go tool nm</code>, <code>go tool objdump</code></td><td>символы и дизассемблер бинарника</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><code>import "runtime/metrics"
+
+samples := []metrics.Sample{
+    {Name: "/memory/classes/heap/objects:bytes"},
+    {Name: "/gc/cycles/total:gc-cycles"},
+    {Name: "/sched/goroutines:goroutines"},
+}
+metrics.Read(samples)
+
+for _, s := range samples {
+    fmt.Println(s.Name, s.Value.Uint64())
+}</code></pre>
+
+  <p class="is-muted"><code>runtime/metrics</code> — стабильный интерфейс: имена метрик не меняются от версии к версии так, как внутренние поля <code>MemStats</code>. Для дашбордов и алертов лучше он.</p>
+</section>
+
+<section id="sources">
+  <h2>10. Первоисточники</h2>
+  <ul>
+    <li><a href="https://go.dev/doc/gc-guide">A Guide to the Go Garbage Collector</a> — mark-sweep, GOGC, GOMEMLIMIT, стоимость GC</li>
+    <li><a href="https://go.dev/doc/diagnostics">Diagnostics</a> — профили, трассировка, отладка, статистика рантайма</li>
+    <li><a href="https://go.dev/blog/pprof">Profiling Go Programs</a> — практика <code>pprof</code></li>
+    <li><a href="https://pkg.go.dev/runtime">pkg.go.dev/runtime</a> — <code>GOMAXPROCS</code>, <code>MemStats</code>, <code>Stack</code>, <code>SetBlockProfileRate</code></li>
+    <li><a href="https://pkg.go.dev/runtime/metrics">pkg.go.dev/runtime/metrics</a> — имена и описание метрик</li>
+    <li><a href="https://pkg.go.dev/runtime/debug">pkg.go.dev/runtime/debug</a> — <code>SetGCPercent</code>, <code>SetMemoryLimit</code>, <code>SetMaxStack</code></li>
+    <li><a href="https://pkg.go.dev/runtime/pprof">pkg.go.dev/runtime/pprof</a> — профили и их включение</li>
+    <li><a href="https://go.dev/doc/go1.25">Release notes Go 1.25</a> — container-aware <code>GOMAXPROCS</code></li>
+    <li><a href="https://go.dev/doc/go1.26">Release notes Go 1.26</a> — рандомизация базы кучи, профиль <code>goroutineleak</code></li>
+    <li><a href="https://go.dev/doc/go1.27">Release notes Go 1.27</a> — специализированные по размеру аллокаторы, <code>goroutineleak</code> GA</li>
+    <li><a href="https://github.com/golang/go/blob/master/src/runtime/proc.go">runtime/proc.go</a> — комментарий планировщика G, M, P</li>
+    <li><a href="https://github.com/golang/go/blob/master/src/runtime/mgc.go">runtime/mgc.go</a> — фазы GC и write barrier</li>
+    <li><a href="https://github.com/golang/go/blob/master/src/runtime/malloc.go">runtime/malloc.go</a> — устройство аллокатора</li>
+  </ul>
+</section>
 
 <footer class="reference-footer">
   <p><strong>Не нашёл ответа?</strong> Значит, сущности нет в справочниках — скажи, добавим.</p>

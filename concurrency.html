@@ -67,7 +67,7 @@
 
 <div class="callout callout--info">
   <p>Собрано из <a href="https://go.dev/ref/mem">модели памяти Go</a>, документации пакетов <a href="https://pkg.go.dev/sync">sync</a> и <a href="https://pkg.go.dev/context">context</a>, <a href="https://go.dev/blog/pipelines">Go Concurrency Patterns: Pipelines and cancellation</a> и release notes. Версия языка — <strong>Go 1.27</strong>.</p>
-  <p>Что появилось когда: <code>sync.OnceFunc</code>, <code>OnceValue</code>, <code>OnceValues</code> — 1.21; <code>sync.WaitGroup.Go</code> — 1.25; <code>testing/synctest</code> — 1.25; профиль утечек горутин — 1.26, экспериментальный.</p>
+  <p>Что появилось когда: <code>sync.OnceFunc</code>, <code>OnceValue</code>, <code>OnceValues</code> — 1.21; <code>sync.WaitGroup.Go</code> — 1.25; <code>testing/synctest</code> — 1.25; профиль утечек горутин — 1.26 экспериментальный, 1.27 общедоступный.</p>
 </div>
 
 <nav id="toc" aria-label="Разделы страницы">
@@ -532,7 +532,7 @@ _ = srv.Shutdown(shutdownCtx)</code></pre>
         <tr><td><code>go test -race</code></td><td>гонки данных в исполненных путях</td></tr>
         <tr><td><code>testing/synctest</code></td><td>конкурентный код с виртуальным временем, без реальных задержек</td></tr>
         <tr><td><code>go vet</code></td><td><code>copylocks</code>: копирование мьютексов и <code>WaitGroup</code></td></tr>
-        <tr><td><code>runtime/pprof</code>, профиль <code>goroutineleak</code></td><td>заблокированные горутины; профиль экспериментальный, включается <code>GOEXPERIMENT=goroutineleakprofile</code></td></tr>
+        <tr><td><code>runtime/pprof</code>, профиль <code>goroutineleak</code></td><td>заблокированные горутины; с Go 1.27 профиль общедоступен</td></tr>
         <tr><td><code>-count</code>, <code>-shuffle</code></td><td>повторяемость и другой порядок тестов</td></tr>
       </tbody>
     </table>
@@ -554,6 +554,7 @@ _ = srv.Shutdown(shutdownCtx)</code></pre>
     <li><a href="https://pkg.go.dev/testing/synctest">pkg.go.dev/testing/synctest</a> — виртуальное время в тестах</li>
     <li><a href="https://go.dev/doc/go1.25">Release notes Go 1.25</a> — <code>WaitGroup.Go</code>, container-aware <code>GOMAXPROCS</code>, <code>synctest</code></li>
     <li><a href="https://go.dev/doc/go1.26">Release notes Go 1.26</a> — экспериментальный профиль <code>goroutineleak</code></li>
+    <li><a href="https://go.dev/doc/go1.27">Release notes Go 1.27</a> — профиль <code>goroutineleak</code> стал общедоступным</li>
   </ul>
 </section>
 
